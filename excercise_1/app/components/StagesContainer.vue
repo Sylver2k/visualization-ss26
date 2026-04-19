@@ -1,0 +1,60 @@
+<template>
+  <div>
+    <intro-stage
+      v-if="stage === 'INTRO'"
+      @start-experiment="stage = 'PARTICIPANT'"
+    />
+
+    <participant-stage
+      v-else-if="stage === 'PARTICIPANT'"
+      v-model="participant"
+      @beginn-session="stage = 'EXPERIMENT'"
+    />
+
+    <experiment-stage
+      v-else-if="stage === 'EXPERIMENT'"
+      :participant="participant"
+      @completed="handleExperimentCompletion"
+    />
+
+    <results-stage
+      v-else-if="stage === 'RESULTS'"
+      :results-payload="participantResults"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+const props = defineProps({
+  modelValue: {
+    type: String,
+    required: true,
+  },
+});
+
+const emit = defineEmits(["update:modelValue"]);
+
+const stage = computed({
+  get() {
+    return props.modelValue;
+  },
+  set(newValue) {
+    emit("update:modelValue", newValue);
+  },
+});
+
+const participant = reactive({
+  id: "",
+  notes: "",
+});
+
+const participantResults = ref();
+
+function handleExperimentCompletion(payload: ExportPayload) {
+  participantResults.value = payload;
+
+  stage.value = "RESULTS";
+}
+</script>
+
+<style scoped></style>
