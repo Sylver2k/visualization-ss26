@@ -76,7 +76,15 @@
     </v-slide-y-transition>
 
     <v-fade-transition mode="out-in">
-      <div :key="currentTrial ? currentTrial.id : isInitialized ? 'complete' : 'loading'">
+      <div
+        :key="
+          currentTrial
+            ? currentTrial.id
+            : isInitialized
+              ? 'complete'
+              : 'loading'
+        "
+      >
         <experiment-trial-canvas
           v-if="isInitialized && currentTrial"
           v-model:adjustable-size="adjustableSize"
@@ -86,18 +94,24 @@
           :trial-label="currentTrialLabel"
         />
 
-        <v-card v-else-if="isInitialized" class="glass-card experiment-complete-card" rounded="xlarge">
+        <v-card
+          v-else-if="isInitialized"
+          class="glass-card experiment-complete-card"
+          rounded="xlarge"
+        >
           <v-card-text class="d-flex flex-column ga-4 pa-6">
             <div class="d-flex flex-column ga-2">
               <div class="section-kicker">Next Step</div>
               <h3 class="text-h5 font-weight-bold">All trials completed</h3>
               <p class="text-body-2 text-medium-emphasis">
-                The session is ready. Continue to the results view to inspect and
-                export the recorded measurements.
+                The session is ready. Continue to the results view to inspect
+                and export the recorded measurements.
               </p>
             </div>
 
-            <div class="experiment-complete-actions d-flex flex-wrap align-center justify-space-between ga-3">
+            <div
+              class="experiment-complete-actions d-flex flex-wrap align-center justify-space-between ga-3"
+            >
               <div class="d-flex align-center ga-3">
                 <v-chip color="primary" variant="tonal">
                   {{ completedTrials.length }} recorded trial(s)
@@ -140,9 +154,9 @@
             <div class="d-flex flex-column ga-1">
               <h3 class="text-h6">Trial Controls</h3>
               <p class="text-body-2 text-medium-emphasis">
-                Use the drag handle to adjust the second shape until it matches the
-                requested perceived ratio. Press Enter to confirm the current
-                trial.
+                Use the drag handle to adjust the second shape until it matches
+                the requested perceived ratio. Press Enter to confirm the
+                current trial.
               </p>
             </div>
 
@@ -359,7 +373,11 @@ function onWindowKeydown(event: KeyboardEvent) {
     return;
   }
 
-  if (!isInitialized.value || !currentTrial.value || isExperimentComplete.value) {
+  if (
+    !isInitialized.value ||
+    !currentTrial.value ||
+    isExperimentComplete.value
+  ) {
     return;
   }
 
@@ -426,8 +444,16 @@ function analyseResults() {
 <style scoped>
 .experiment-complete-card {
   background:
-    radial-gradient(circle at top right, rgba(var(--v-theme-primary), 0.18), transparent 34%),
-    linear-gradient(180deg, rgba(15, 27, 36, 0.96) 0%, rgba(11, 21, 29, 0.94) 100%);
+    radial-gradient(
+      circle at top right,
+      rgba(var(--v-theme-primary), 0.18),
+      transparent 34%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(15, 27, 36, 0.96) 0%,
+      rgba(11, 21, 29, 0.94) 100%
+    );
   border-color: rgba(var(--v-theme-primary), 0.22);
   box-shadow:
     0 22px 48px rgba(0, 0, 0, 0.32),
@@ -451,9 +477,5 @@ function analyseResults() {
 
 .analyse-results-btn :deep(.v-btn__prepend) {
   margin-inline-end: 10px;
-}
-
-.analyse-results-btn:hover {
-  transform: translateY(-1px);
 }
 </style>
