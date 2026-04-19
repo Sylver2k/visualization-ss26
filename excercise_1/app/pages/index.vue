@@ -13,7 +13,7 @@
     </v-card>
 
     <v-card class="pa-4 mb-4">
-      <stage-indicator v-model="stage" @set-stage="stage = $event" />
+      <stage-indicator v-model="stage" />
     </v-card>
 
     <stages-container v-model="stage" />

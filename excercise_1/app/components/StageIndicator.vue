@@ -47,7 +47,7 @@ const { STAGES } = useDefaults();
 function onStageClick(stageId: string) {
   if (!["INTRO", "RESULTS"].includes(stageId)) return;
 
-  emit("set-stage", stageId);
+  currentStage.value = stageId;
 }
 </script>
 
