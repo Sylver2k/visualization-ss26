@@ -6,9 +6,13 @@
           <div>
             <div class="text-overline">Summary</div>
             <h2 class="text-h5">Participant and aggregate results</h2>
-            <p class="text-body-2">
+            <p v-if="hasAnySessions" class="text-body-2">
               The table below summarizes all loaded sessions using trials with a
               computed <strong>x</strong> value.
+            </p>
+            <p v-else class="text-body-2">
+              Import a JSON results file to analyze participant and aggregate
+              results.
             </p>
           </div>
 
@@ -49,6 +53,7 @@
           <div class="d-flex flex-wrap ga-3">
             <v-btn
               color="primary"
+              :disabled="!hasCurrentSession"
               prepend-icon="mdi-file-export"
               @click="exportJson"
             >
@@ -84,14 +89,18 @@
       <v-card-text class="d-flex flex-column ga-4">
         <div>
           <h3 class="text-h6">Participant summary table</h3>
-          <p class="text-body-2">
+          <p v-if="hasAnySessions" class="text-body-2">
             One row per loaded session, based on trials where
             <code>computedX</code>
             is available.
           </p>
+          <p v-else class="text-body-2">
+            No sessions are loaded yet. Import a JSON results payload to populate
+            this table.
+          </p>
         </div>
 
-        <div class="table-shell">
+        <div v-if="hasAnySessions" class="table-shell">
           <v-table class="results-table">
             <thead>
               <tr>
@@ -113,6 +122,9 @@
             </tbody>
           </v-table>
         </div>
+        <div v-else class="empty-state">
+          No participant summaries available yet.
+        </div>
       </v-card-text>
     </v-card>
 
@@ -120,13 +132,16 @@
       <v-card-text class="d-flex flex-column ga-4">
         <div>
           <h3 class="text-h6">Raw trial data</h3>
-          <p class="text-body-2">
+          <p v-if="hasAnySessions" class="text-body-2">
             This table includes all trials from the current session and imported
             sessions.
           </p>
+          <p v-else class="text-body-2">
+            Raw trials will appear here after you import a JSON results payload.
+          </p>
         </div>
 
-        <div class="table-shell">
+        <div v-if="hasAnySessions" class="table-shell">
           <v-table class="results-table results-table--compact" fixed-header height="480">
             <thead>
               <tr>
@@ -155,6 +170,9 @@
             </tbody>
           </v-table>
         </div>
+        <div v-else class="empty-state">
+          No trial data available yet.
+        </div>
       </v-card-text>
     </v-card>
   </div>
@@ -163,17 +181,25 @@
 <script setup lang="ts">
 const props = defineProps({
   resultsPayload: {
-    type: Object as PropType<ExportPayload>,
-    required: true,
+    type: Object as PropType<ExportPayload | null | undefined>,
+    required: false,
+    default: null,
   },
 });
 
 const importedSessions = ref<SessionResult[]>([]);
 const importMessage = ref("");
 const importInput = ref<HTMLInputElement | null>(null);
+const currentSession = computed<SessionResult | null>(
+  () => props.resultsPayload?.session ?? null,
+);
+const hasCurrentSession = computed(() => currentSession.value !== null);
+const hasAnySessions = computed(() => allSessions.value.length > 0);
 
 const allSessions = computed(() => {
-  const sessions = [props.resultsPayload.session, ...importedSessions.value];
+  const sessions = currentSession.value
+    ? [currentSession.value, ...importedSessions.value]
+    : [...importedSessions.value];
   const deduped = new Map<string, SessionResult>();
 
   for (const session of sessions) {
@@ -232,8 +258,12 @@ const participantRows = computed<SessionRow[]>(() =>
 );
 
 const currentSessionLabel = computed(() => {
-  const participantId = props.resultsPayload.session.participant.id.trim();
-  return participantId || props.resultsPayload.session.sessionId;
+  if (!currentSession.value) {
+    return "none";
+  }
+
+  const participantId = currentSession.value.participant.id.trim();
+  return participantId || currentSession.value.sessionId;
 });
 
 function calculateStats(trials: TrialResult[]): SummaryStats {
@@ -285,6 +315,10 @@ function downloadFile(filename: string, content: string, type: string) {
 }
 
 function exportJson() {
+  if (!props.resultsPayload) {
+    return;
+  }
+
   downloadFile(
     `perceived-area-session-${Date.now()}.json`,
     JSON.stringify(props.resultsPayload, null, 2),
@@ -330,6 +364,13 @@ async function importJson(event: Event) {
 <style scoped>
 .hidden-input {
   display: none;
+}
+
+.empty-state {
+  border: 1px dashed rgba(var(--v-theme-on-surface), 0.24);
+  border-radius: 16px;
+  color: rgba(var(--v-theme-on-surface), 0.68);
+  padding: 20px 16px;
 }
 
 .results-summary-grid {
