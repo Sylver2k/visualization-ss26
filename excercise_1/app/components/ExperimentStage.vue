@@ -86,16 +86,18 @@
           :trial-label="currentTrialLabel"
         />
 
-        <v-card v-else-if="isInitialized" class="glass-card" rounded="xlarge">
+        <v-card v-else-if="isInitialized" class="glass-card experiment-complete-card" rounded="xlarge">
           <v-card-text class="d-flex flex-column ga-4 pa-6">
-            <div>
-              <h3 class="text-h6">All trials completed</h3>
+            <div class="d-flex flex-column ga-2">
+              <div class="section-kicker">Next Step</div>
+              <h3 class="text-h5 font-weight-bold">All trials completed</h3>
               <p class="text-body-2 text-medium-emphasis">
-                The session is ready to be exported as JSON.
+                The session is ready. Continue to the results view to inspect and
+                export the recorded measurements.
               </p>
             </div>
 
-            <div class="d-flex flex-wrap align-center justify-space-between ga-3">
+            <div class="experiment-complete-actions d-flex flex-wrap align-center justify-space-between ga-3">
               <div class="d-flex align-center ga-3">
                 <v-chip color="primary" variant="tonal">
                   {{ completedTrials.length }} recorded trial(s)
@@ -107,13 +109,15 @@
               </div>
 
               <v-btn
-                color="secondary"
-                size="large"
-                variant="tonal"
+                class="analyse-results-btn"
+                color="primary"
+                elevation="10"
                 prepend-icon="mdi-file-export"
+                rounded="pill"
+                size="x-large"
                 @click="analyseResults"
               >
-                Analyse Results
+                View Results
               </v-btn>
             </div>
           </v-card-text>
@@ -419,4 +423,37 @@ function analyseResults() {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.experiment-complete-card {
+  background:
+    radial-gradient(circle at top right, rgba(var(--v-theme-primary), 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(15, 27, 36, 0.96) 0%, rgba(11, 21, 29, 0.94) 100%);
+  border-color: rgba(var(--v-theme-primary), 0.22);
+  box-shadow:
+    0 22px 48px rgba(0, 0, 0, 0.32),
+    0 0 0 1px rgba(var(--v-theme-primary), 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.experiment-complete-actions {
+  background: rgba(var(--v-theme-primary), 0.08);
+  border: 1px solid rgba(var(--v-theme-primary), 0.16);
+  border-radius: 24px;
+  padding: 18px;
+}
+
+.analyse-results-btn {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  min-width: 210px;
+  text-transform: none;
+}
+
+.analyse-results-btn :deep(.v-btn__prepend) {
+  margin-inline-end: 10px;
+}
+
+.analyse-results-btn:hover {
+  transform: translateY(-1px);
+}
+</style>
