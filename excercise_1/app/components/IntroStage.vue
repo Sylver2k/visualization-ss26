@@ -1,5 +1,5 @@
 <template>
-  <v-row class="ga-0" dense>
+  <v-row class="ga-0" density="comfortable">
     <v-col cols="12" md="7">
       <v-slide-y-transition appear>
         <v-card class="glass-card h-100" rounded="xlarge">
