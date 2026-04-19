@@ -1,146 +1,161 @@
 <template>
   <div class="d-flex flex-column ga-4">
-    <v-card rounded="xl">
-      <v-card-text
-        class="d-flex flex-wrap align-center justify-space-between ga-4"
-      >
-        <div class="d-flex flex-column ga-1">
-          <div class="text-overline">Experiment</div>
-          <h2 class="text-h5">{{ participant.id }}</h2>
-          <p class="text-body-2">
-            Complete one randomized pass of the target ratios for circles and
-            squares.
-          </p>
-        </div>
+    <v-slide-y-transition appear>
+      <v-card class="glass-card" rounded="xlarge">
+        <v-card-text
+          class="d-flex flex-wrap align-center justify-space-between ga-4 pa-5 pa-md-6"
+        >
+          <div class="d-flex flex-column ga-1">
+            <div class="section-kicker">Experiment</div>
+            <h2 class="text-h5">{{ participant.id }}</h2>
+            <p class="text-body-2 text-medium-emphasis">
+              Complete one randomized pass of the target ratios for circles and
+              squares.
+            </p>
+          </div>
 
-        <div class="d-flex flex-wrap align-center ga-3">
-          <v-switch
-            v-model="activeMode"
-            class="flex-grow-0"
+          <div class="d-flex flex-wrap align-center ga-3">
+            <v-switch
+              v-model="activeMode"
+              class="flex-grow-0"
+              color="primary"
+              false-value="circle"
+              true-value="square"
+              :disabled="modeSwitchDisabled || isExperimentComplete"
+              hide-details
+              inset
+            >
+              <template #label>
+                <span class="text-body-2">
+                  Mode:
+                  <strong>{{ currentShapeLabel }}</strong>
+                </span>
+              </template>
+            </v-switch>
+
+            <v-chip color="primary" size="large" variant="tonal">
+              {{ currentTrialLabel }}
+            </v-chip>
+
+            <v-chip color="secondary" size="large" variant="outlined">
+              Target ratio {{ currentTrial?.targetRatio ?? "-" }}
+            </v-chip>
+          </div>
+        </v-card-text>
+      </v-card>
+    </v-slide-y-transition>
+
+    <v-slide-y-transition appear>
+      <v-card class="glass-card" rounded="xlarge">
+        <v-card-text class="d-flex flex-column ga-4 pa-5 pa-md-6">
+          <div class="d-flex flex-wrap align-center justify-space-between ga-3">
+            <div class="d-flex flex-column ga-2">
+              <div class="section-kicker">Progress</div>
+              <div class="text-body-1">
+                {{ progressDescription }}
+              </div>
+            </div>
+
+            <div
+              v-if="modeSwitchDisabled && !isExperimentComplete"
+              class="text-caption text-medium-emphasis"
+            >
+              Mode switching is locked after the first confirmed trial in this
+              mode.
+            </div>
+          </div>
+
+          <v-progress-linear
+            :model-value="progressValue"
             color="primary"
-            false-value="circle"
-            true-value="square"
-            :disabled="modeSwitchDisabled || isExperimentComplete"
-            hide-details
-            inset
-          >
-            <template #label>
-              <span class="text-body-2">
-                Mode:
-                <strong>{{ currentShapeLabel }}</strong>
-              </span>
-            </template>
-          </v-switch>
+            height="10"
+            rounded
+          />
+        </v-card-text>
+      </v-card>
+    </v-slide-y-transition>
 
-          <v-chip color="primary" variant="tonal">
-            {{ currentTrialLabel }}
-          </v-chip>
-
-          <v-chip color="orange" variant="outlined">
-            Target ratio {{ currentTrial?.targetRatio ?? "-" }}
-          </v-chip>
-        </div>
-      </v-card-text>
-    </v-card>
-
-    <v-card rounded="xl">
-      <v-card-text class="d-flex flex-column ga-3">
-        <div class="d-flex flex-wrap align-center justify-space-between ga-3">
-          <div class="text-body-2">
-            {{ progressDescription }}
-          </div>
-
-          <div
-            v-if="modeSwitchDisabled && !isExperimentComplete"
-            class="text-caption text-medium-emphasis"
-          >
-            Mode switching is locked after the first confirmed trial in this
-            mode.
-          </div>
-        </div>
-
-        <v-progress-linear
-          :model-value="progressValue"
-          color="primary"
-          height="10"
-          rounded
+    <v-fade-transition mode="out-in">
+      <div :key="currentTrial ? currentTrial.id : isInitialized ? 'complete' : 'loading'">
+        <experiment-trial-canvas
+          v-if="isInitialized && currentTrial"
+          v-model:adjustable-size="adjustableSize"
+          :shape="currentTrial.shape"
+          :reference-size="REFERENCE_SIZE"
+          :target-ratio="currentTrial.targetRatio"
+          :trial-label="currentTrialLabel"
         />
-      </v-card-text>
-    </v-card>
 
-    <experiment-trial-canvas
-      v-if="isInitialized && currentTrial"
-      v-model:adjustable-size="adjustableSize"
-      :shape="currentTrial.shape"
-      :reference-size="REFERENCE_SIZE"
-      :target-ratio="currentTrial.targetRatio"
-      :trial-label="currentTrialLabel"
-    />
+        <v-card v-else-if="isInitialized" class="glass-card" rounded="xlarge">
+          <v-card-text class="d-flex flex-column ga-4 pa-6">
+            <div>
+              <h3 class="text-h6">All trials completed</h3>
+              <p class="text-body-2 text-medium-emphasis">
+                The session is ready to be exported as JSON.
+              </p>
+            </div>
 
-    <v-card v-else-if="isInitialized" rounded="xl">
-      <v-card-text class="d-flex flex-column ga-3">
-        <div>
-          <h3 class="text-h6">All trials completed</h3>
-          <p class="text-body-2">
-            The session is ready to be exported as JSON.
-          </p>
-        </div>
+            <div class="d-flex flex-wrap align-center justify-space-between ga-3">
+              <div class="d-flex align-center ga-3">
+                <v-chip color="primary" variant="tonal">
+                  {{ completedTrials.length }} recorded trial(s)
+                </v-chip>
 
-        <div class="d-flex flex-wrap align-center justify-space-between ga-3">
-          <div class="d-flex align-center ga-3">
-            <v-chip color="primary" variant="tonal">
-              {{ completedTrials.length }} recorded trial(s)
-            </v-chip>
+                <v-chip color="secondary" variant="outlined">
+                  Session {{ currentSessionId }}
+                </v-chip>
+              </div>
 
-            <v-chip color="secondary" variant="outlined">
-              Session {{ currentSessionId }}
-            </v-chip>
-          </div>
+              <v-btn
+                color="secondary"
+                size="large"
+                variant="tonal"
+                prepend-icon="mdi-file-export"
+                @click="analyseResults"
+              >
+                Analyse Results
+              </v-btn>
+            </div>
+          </v-card-text>
+        </v-card>
 
-          <v-btn
-            color="secondary"
-            size="large"
-            variant="tonal"
-            prepend-icon="mdi-file-export"
-            @click="analyseResults"
+        <v-card v-else class="glass-card" rounded="xlarge">
+          <v-card-text class="text-body-2 pa-6">
+            Preparing experiment session...
+          </v-card-text>
+        </v-card>
+      </div>
+    </v-fade-transition>
+
+    <v-fade-transition>
+      <div v-if="!isExperimentComplete">
+        <v-card class="glass-card" rounded="xlarge">
+          <v-card-text
+            class="d-flex flex-wrap align-center justify-space-between ga-4 pa-5 pa-md-6"
           >
-            Analyse Results
-          </v-btn>
-        </div>
-      </v-card-text>
-    </v-card>
+            <div class="d-flex flex-column ga-1">
+              <h3 class="text-h6">Trial Controls</h3>
+              <p class="text-body-2 text-medium-emphasis">
+                Use the drag handle to adjust the second shape until it matches the
+                requested perceived ratio.
+              </p>
+            </div>
 
-    <v-card v-else rounded="xl">
-      <v-card-text class="text-body-2">
-        Preparing experiment session...
-      </v-card-text>
-    </v-card>
-
-    <v-card v-if="!isExperimentComplete" rounded="xl">
-      <v-card-text
-        class="d-flex flex-wrap align-center justify-space-between ga-4"
-      >
-        <div class="d-flex flex-column ga-1">
-          <h3 class="text-h6">Trial Controls</h3>
-          <p class="text-body-2">
-            Use the drag handle to adjust the second shape until it matches the
-            requested perceived ratio.
-          </p>
-        </div>
-
-        <div class="d-flex flex-wrap align-center ga-3">
-          <v-btn
-            color="primary"
-            size="large"
-            prepend-icon="mdi-check"
-            :disabled="!currentTrial"
-            @click="confirmTrial"
-          >
-            Confirm Trial
-          </v-btn>
-        </div>
-      </v-card-text>
-    </v-card>
+            <div class="d-flex flex-wrap align-center ga-3">
+              <v-btn
+                color="primary"
+                size="large"
+                prepend-icon="mdi-check"
+                :disabled="!currentTrial"
+                @click="confirmTrial"
+              >
+                Confirm Trial
+              </v-btn>
+            </div>
+          </v-card-text>
+        </v-card>
+      </div>
+    </v-fade-transition>
   </div>
 </template>
 

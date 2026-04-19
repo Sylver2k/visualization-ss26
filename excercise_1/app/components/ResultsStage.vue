@@ -1,180 +1,198 @@
 <template>
   <div class="d-flex flex-column ga-4">
-    <div class="d-flex flex-wrap ga-4">
-      <v-card class="flex-grow-1" min-width="320" rounded="xl">
-        <v-card-text class="d-flex flex-column ga-4">
-          <div>
-            <div class="text-overline">Summary</div>
-            <h2 class="text-h5">Participant and aggregate results</h2>
-            <p v-if="hasAnySessions" class="text-body-2">
-              The table below summarizes all loaded sessions using trials with a
-              computed <strong>x</strong> value.
-            </p>
-            <p v-else class="text-body-2">
-              Import a JSON results file to analyze participant and aggregate
-              results.
-            </p>
-          </div>
-
-          <div class="results-summary-grid">
-            <div class="results-summary-grid__item">
-              <span>Circle mean x</span>
-              <strong>{{ formatNumber(aggregateCircleStats.mean) }}</strong>
+    <v-slide-y-transition appear>
+      <div class="d-flex flex-wrap ga-4">
+        <v-card class="glass-card flex-grow-1" min-width="320" rounded="xlarge">
+          <v-card-text class="d-flex flex-column ga-4 pa-6">
+            <div>
+              <div class="section-kicker">Summary</div>
+              <h2 class="text-h5">Participant and aggregate results</h2>
+              <p v-if="hasAnySessions" class="text-body-2 text-medium-emphasis">
+                The table below summarizes all loaded sessions using trials with a
+                computed <strong>x</strong> value.
+              </p>
+              <p v-else class="text-body-2 text-medium-emphasis">
+                Import a JSON results file to analyze participant and aggregate
+                results.
+              </p>
             </div>
-            <div class="results-summary-grid__item">
-              <span>Square mean x</span>
-              <strong>{{ formatNumber(aggregateSquareStats.mean) }}</strong>
+
+            <div class="results-summary-grid">
+              <div class="results-summary-grid__item">
+                <span>Circle mean x</span>
+                <strong>{{ formatNumber(aggregateCircleStats.mean) }}</strong>
+              </div>
+              <div class="results-summary-grid__item">
+                <span>Square mean x</span>
+                <strong>{{ formatNumber(aggregateSquareStats.mean) }}</strong>
+              </div>
+              <div class="results-summary-grid__item">
+                <span>Overall mean x</span>
+                <strong>{{ formatNumber(aggregateOverallStats.mean) }}</strong>
+              </div>
+              <div class="results-summary-grid__item">
+                <span>Counted trials</span>
+                <strong>{{ aggregateOverallStats.count }}</strong>
+              </div>
             </div>
-            <div class="results-summary-grid__item">
-              <span>Overall mean x</span>
-              <strong>{{ formatNumber(aggregateOverallStats.mean) }}</strong>
+          </v-card-text>
+        </v-card>
+
+        <v-card class="glass-card" min-width="320" rounded="xlarge">
+          <v-card-text class="d-flex flex-column ga-4 pa-6">
+            <div>
+              <div class="section-kicker">Archive</div>
+              <h2 class="text-h6">JSON import and export</h2>
             </div>
-            <div class="results-summary-grid__item">
-              <span>Counted trials</span>
-              <strong>{{ aggregateOverallStats.count }}</strong>
+
+            <div class="d-flex flex-column ga-2 text-body-2 text-medium-emphasis">
+              <div>Current session: {{ currentSessionLabel }}</div>
+              <div>Imported sessions: {{ importedSessions.length }}</div>
+              <div>Total analyzed sessions: {{ allSessions.length }}</div>
             </div>
-          </div>
-        </v-card-text>
-      </v-card>
 
-      <v-card min-width="320" rounded="xl">
-        <v-card-text class="d-flex flex-column ga-4">
-          <div>
-            <div class="text-overline">Archive</div>
-            <h2 class="text-h6">JSON import and export</h2>
-          </div>
-
-          <div class="d-flex flex-column ga-1 text-body-2">
-            <div>Current session: {{ currentSessionLabel }}</div>
-            <div>Imported sessions: {{ importedSessions.length }}</div>
-            <div>Total analyzed sessions: {{ allSessions.length }}</div>
-          </div>
-
-          <div class="d-flex flex-wrap ga-3">
-            <v-btn
-              color="primary"
-              :disabled="!hasCurrentSession"
-              prepend-icon="mdi-file-export"
-              @click="exportJson"
-            >
-              Export JSON
-            </v-btn>
-
-            <v-btn
-              color="secondary"
-              prepend-icon="mdi-file-import"
-              variant="outlined"
-              @click="triggerImport"
-            >
-              Import JSON
-            </v-btn>
-          </div>
-
-          <input
-            ref="importInput"
-            accept=".json,application/json"
-            class="hidden-input"
-            type="file"
-            @change="importJson"
-          />
-
-          <p v-if="importMessage" class="text-body-2">
-            {{ importMessage }}
-          </p>
-        </v-card-text>
-      </v-card>
-    </div>
-
-    <v-card rounded="xl">
-      <v-card-text class="d-flex flex-column ga-4">
-        <div>
-          <h3 class="text-h6">Participant summary table</h3>
-          <p v-if="hasAnySessions" class="text-body-2">
-            One row per loaded session, based on trials where
-            <code>computedX</code>
-            is available.
-          </p>
-          <p v-else class="text-body-2">
-            No sessions are loaded yet. Import a JSON results payload to populate
-            this table.
-          </p>
-        </div>
-
-        <div v-if="hasAnySessions" class="table-shell">
-          <v-table class="results-table">
-            <thead>
-              <tr>
-                <th>Participant</th>
-                <th>Circle mean x</th>
-                <th>Square mean x</th>
-                <th>Overall mean x</th>
-                <th>Trial count</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in participantRows" :key="row.sessionId">
-                <td>{{ row.participantId }}</td>
-                <td>{{ formatNumber(row.circleStats.mean) }}</td>
-                <td>{{ formatNumber(row.squareStats.mean) }}</td>
-                <td>{{ formatNumber(row.overallStats.mean) }}</td>
-                <td>{{ row.overallStats.count }}</td>
-              </tr>
-            </tbody>
-          </v-table>
-        </div>
-        <div v-else class="empty-state">
-          No participant summaries available yet.
-        </div>
-      </v-card-text>
-    </v-card>
-
-    <v-card rounded="xl">
-      <v-card-text class="d-flex flex-column ga-4">
-        <div>
-          <h3 class="text-h6">Raw trial data</h3>
-          <p v-if="hasAnySessions" class="text-body-2">
-            This table includes all trials from the current session and imported
-            sessions.
-          </p>
-          <p v-else class="text-body-2">
-            Raw trials will appear here after you import a JSON results payload.
-          </p>
-        </div>
-
-        <div v-if="hasAnySessions" class="table-shell">
-          <v-table class="results-table results-table--compact" fixed-header height="480">
-            <thead>
-              <tr>
-                <th>Participant</th>
-                <th>Shape</th>
-                <th>Target ratio</th>
-                <th>Actual ratio</th>
-                <th>x</th>
-                <th>Timestamp</th>
-                <th>Trial index</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="trial in allRawTrials"
-                :key="`${trial.sessionId}-${trial.trialId}-${trial.trialIndex}-${trial.timestamp}`"
+            <div class="d-flex flex-wrap ga-3">
+              <v-btn
+                color="primary"
+                :disabled="!hasCurrentSession"
+                prepend-icon="mdi-file-export"
+                @click="exportJson"
               >
-                <td>{{ trial.participantId }}</td>
-                <td>{{ trial.shape }}</td>
-                <td>{{ trial.targetRatio }}</td>
-                <td>{{ trial.actualAreaRatio.toFixed(3) }}</td>
-                <td>{{ formatNumber(trial.computedX) }}</td>
-                <td>{{ formatTimestamp(trial.timestamp) }}</td>
-                <td>{{ trial.trialIndex }}</td>
-              </tr>
-            </tbody>
-          </v-table>
-        </div>
-        <div v-else class="empty-state">
-          No trial data available yet.
-        </div>
-      </v-card-text>
-    </v-card>
+                Export JSON
+              </v-btn>
+
+              <v-btn
+                color="secondary"
+                prepend-icon="mdi-file-import"
+                variant="outlined"
+                @click="triggerImport"
+              >
+                Import JSON
+              </v-btn>
+            </div>
+
+            <input
+              ref="importInput"
+              accept=".json,application/json"
+              class="hidden-input"
+              type="file"
+              @change="importJson"
+            />
+
+            <v-fade-transition>
+              <v-alert
+                v-if="importMessage"
+                color="primary"
+                density="comfortable"
+                rounded="xl"
+                variant="tonal"
+              >
+                {{ importMessage }}
+              </v-alert>
+            </v-fade-transition>
+          </v-card-text>
+        </v-card>
+      </div>
+    </v-slide-y-transition>
+
+    <v-slide-y-transition appear>
+      <v-card class="glass-card" rounded="xlarge">
+        <v-card-text class="d-flex flex-column ga-4 pa-6">
+          <div>
+            <h3 class="text-h6">Participant summary table</h3>
+            <p v-if="hasAnySessions" class="text-body-2 text-medium-emphasis">
+              One row per loaded session, based on trials where
+              <code>computedX</code>
+              is available.
+            </p>
+            <p v-else class="text-body-2 text-medium-emphasis">
+              No sessions are loaded yet. Import a JSON results payload to populate
+              this table.
+            </p>
+          </div>
+
+          <div v-if="hasAnySessions" class="table-shell">
+            <v-table class="results-table">
+              <thead>
+                <tr>
+                  <th>Participant</th>
+                  <th>Circle mean x</th>
+                  <th>Square mean x</th>
+                  <th>Overall mean x</th>
+                  <th>Trial count</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in participantRows" :key="row.sessionId">
+                  <td>{{ row.participantId }}</td>
+                  <td>{{ formatNumber(row.circleStats.mean) }}</td>
+                  <td>{{ formatNumber(row.squareStats.mean) }}</td>
+                  <td>{{ formatNumber(row.overallStats.mean) }}</td>
+                  <td>{{ row.overallStats.count }}</td>
+                </tr>
+              </tbody>
+            </v-table>
+          </div>
+          <v-fade-transition>
+            <div v-if="!hasAnySessions" class="empty-state">
+              No participant summaries available yet.
+            </div>
+          </v-fade-transition>
+        </v-card-text>
+      </v-card>
+    </v-slide-y-transition>
+
+    <v-slide-y-transition appear>
+      <v-card class="glass-card" rounded="xlarge">
+        <v-card-text class="d-flex flex-column ga-4 pa-6">
+          <div>
+            <h3 class="text-h6">Raw trial data</h3>
+            <p v-if="hasAnySessions" class="text-body-2 text-medium-emphasis">
+              This table includes all trials from the current session and imported
+              sessions.
+            </p>
+            <p v-else class="text-body-2 text-medium-emphasis">
+              Raw trials will appear here after you import a JSON results payload.
+            </p>
+          </div>
+
+          <div v-if="hasAnySessions" class="table-shell">
+            <v-table class="results-table results-table--compact" fixed-header height="480">
+              <thead>
+                <tr>
+                  <th>Participant</th>
+                  <th>Shape</th>
+                  <th>Target ratio</th>
+                  <th>Actual ratio</th>
+                  <th>x</th>
+                  <th>Timestamp</th>
+                  <th>Trial index</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="trial in allRawTrials"
+                  :key="`${trial.sessionId}-${trial.trialId}-${trial.trialIndex}-${trial.timestamp}`"
+                >
+                  <td>{{ trial.participantId }}</td>
+                  <td>{{ trial.shape }}</td>
+                  <td>{{ trial.targetRatio }}</td>
+                  <td>{{ trial.actualAreaRatio.toFixed(3) }}</td>
+                  <td>{{ formatNumber(trial.computedX) }}</td>
+                  <td>{{ formatTimestamp(trial.timestamp) }}</td>
+                  <td>{{ trial.trialIndex }}</td>
+                </tr>
+              </tbody>
+            </v-table>
+          </div>
+          <v-fade-transition>
+            <div v-if="!hasAnySessions" class="empty-state">
+              No trial data available yet.
+            </div>
+          </v-fade-transition>
+        </v-card-text>
+      </v-card>
+    </v-slide-y-transition>
   </div>
 </template>
 
@@ -380,7 +398,8 @@ async function importJson(event: Event) {
 }
 
 .results-summary-grid__item {
-  border: 1px solid rgb(var(--v-theme-surface-variant));
+  background: rgba(24, 48, 58, 0.42);
+  border: 1px solid rgba(230, 241, 244, 0.08);
   border-radius: 16px;
   display: flex;
   flex-direction: column;
@@ -415,7 +434,7 @@ async function importJson(event: Event) {
 }
 
 .results-table :deep(th) {
-  background: rgba(var(--v-theme-primary), 0.08);
+  background: rgba(var(--v-theme-primary), 0.12);
   font-size: 0.875rem;
   font-weight: 600;
 }

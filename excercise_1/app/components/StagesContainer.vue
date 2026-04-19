@@ -1,27 +1,29 @@
 <template>
-  <div>
-    <intro-stage
-      v-if="stage === 'INTRO'"
-      @start-experiment="stage = 'PARTICIPANT'"
-    />
+  <v-fade-transition mode="out-in">
+    <div :key="stage">
+      <intro-stage
+        v-if="stage === 'INTRO'"
+        @start-experiment="stage = 'PARTICIPANT'"
+      />
 
-    <participant-stage
-      v-else-if="stage === 'PARTICIPANT'"
-      v-model="participant"
-      @beginn-session="stage = 'EXPERIMENT'"
-    />
+      <participant-stage
+        v-else-if="stage === 'PARTICIPANT'"
+        v-model="participant"
+        @beginn-session="stage = 'EXPERIMENT'"
+      />
 
-    <experiment-stage
-      v-else-if="stage === 'EXPERIMENT'"
-      :participant="participant"
-      @completed="handleExperimentCompletion"
-    />
+      <experiment-stage
+        v-else-if="stage === 'EXPERIMENT'"
+        :participant="participant"
+        @completed="handleExperimentCompletion"
+      />
 
-    <results-stage
-      v-else-if="stage === 'RESULTS'"
-      :results-payload="participantResults"
-    />
-  </div>
+      <results-stage
+        v-else-if="stage === 'RESULTS'"
+        :results-payload="participantResults"
+      />
+    </div>
+  </v-fade-transition>
 </template>
 
 <script setup lang="ts">
