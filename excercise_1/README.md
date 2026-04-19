@@ -36,6 +36,13 @@ Before running the application, make sure Node.js is installed on your machine.
 
 ## Installation
 
+Clone the repository and move into the project folder:
+
+```bash
+git clone https://github.com/Sylver2k/visualization-ss26.git
+cd visualization-ss26/excercise_1
+```
+
 Install the project dependencies from the repository root:
 
 ```bash
