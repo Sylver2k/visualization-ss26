@@ -137,7 +137,8 @@
               <h3 class="text-h6">Trial Controls</h3>
               <p class="text-body-2 text-medium-emphasis">
                 Use the drag handle to adjust the second shape until it matches the
-                requested perceived ratio.
+                requested perceived ratio. Press Enter to confirm the current
+                trial.
               </p>
             </div>
 
@@ -255,7 +256,12 @@ watch(activeMode, () => {
 });
 
 onMounted(() => {
+  window.addEventListener("keydown", onWindowKeydown);
   initializeExperiment();
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("keydown", onWindowKeydown);
 });
 
 function initializeExperiment() {
@@ -342,6 +348,19 @@ function isShapeComplete(shape: ShapeType) {
 
 function resetTrialInteraction() {
   adjustableSize.value = REFERENCE_SIZE;
+}
+
+function onWindowKeydown(event: KeyboardEvent) {
+  if (event.key !== "Enter" || event.repeat) {
+    return;
+  }
+
+  if (!isInitialized.value || !currentTrial.value || isExperimentComplete.value) {
+    return;
+  }
+
+  event.preventDefault();
+  confirmTrial();
 }
 
 function confirmTrial() {
