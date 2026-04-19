@@ -45,12 +45,12 @@ const stage = computed({
   },
 });
 
-const participant = reactive({
+const participant = ref<Participant>({
   id: "",
   notes: "",
 });
 
-const participantResults = ref();
+const participantResults = ref<ExportPayload | null>(null);
 
 function handleExperimentCompletion(payload: ExportPayload) {
   participantResults.value = payload;

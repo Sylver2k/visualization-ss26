@@ -79,8 +79,8 @@
       </v-card>
     </v-fade-transition>
 
-    <v-fade-transition mode="out-in">
-      <v-sheet :key="stage" class="canvas-shell pa-3 pa-md-4" rounded="xlarge">
+    <v-fade-transition>
+      <v-sheet class="canvas-shell pa-3 pa-md-4" rounded="xlarge">
         <stages-container v-model="stage" />
       </v-sheet>
     </v-fade-transition>

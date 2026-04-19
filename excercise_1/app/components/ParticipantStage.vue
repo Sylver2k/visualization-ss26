@@ -16,7 +16,7 @@
             </div>
 
             <v-text-field
-              v-model="participant.id"
+              v-model="participantId"
               color="primary"
               density="comfortable"
               label="Participant ID or name"
@@ -27,7 +27,7 @@
             />
 
             <v-textarea
-              v-model="participant.notes"
+              v-model="participantNotes"
               auto-grow
               color="primary"
               label="Optional notes"
@@ -49,8 +49,8 @@
                 prepend-icon="mdi-arrow-right"
                 rounded="pill"
                 size="x-large"
-                :disabled="!participant.id"
-                @click="emit('beginn-session')"
+                :disabled="!canBeginSession"
+                @click="beginSession"
               >
                 Begin Session
               </v-btn>
@@ -105,14 +105,40 @@ const props = defineProps({
 
 const emit = defineEmits(["update:modelValue", "beginn-session"]);
 
-const participant = computed({
-  get() {
-    return props.modelValue;
+const participantId = ref(props.modelValue.id ?? "");
+const participantNotes = ref(props.modelValue.notes ?? "");
+
+const canBeginSession = computed(() => participantId.value.trim().length > 0);
+
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    participantId.value = newValue.id ?? "";
+    participantNotes.value = newValue.notes ?? "";
   },
-  set(newValue) {
-    emit("update:modelValue", newValue);
-  },
+  { deep: true },
+);
+
+watch([participantId, participantNotes], emitParticipantUpdate, {
+  immediate: true,
 });
+
+function emitParticipantUpdate() {
+  emit("update:modelValue", {
+    ...props.modelValue,
+    id: participantId.value,
+    notes: participantNotes.value,
+  });
+}
+
+function beginSession() {
+  emit("update:modelValue", {
+    ...props.modelValue,
+    id: participantId.value.trim(),
+    notes: participantNotes.value.trim(),
+  });
+  emit("beginn-session");
+}
 
 const steps = [
   "Read the target ratio shown above the shapes before adjusting anything.",

@@ -195,6 +195,10 @@ const { TARGET_RATIOS, REFERENCE_SIZE } = useDefaults();
 const isInitialized = ref(false);
 const currentSessionId = ref("");
 const sessionCreatedAt = ref("");
+const sessionParticipant = reactive<Participant>({
+  id: "",
+  notes: "",
+});
 const activeMode = ref<ShapeType>("circle");
 const adjustableSize = ref(REFERENCE_SIZE);
 const completedTrials = ref<TrialResult[]>([]);
@@ -258,8 +262,8 @@ const currentSession = computed<SessionResult>(() => ({
   sessionId: currentSessionId.value,
   createdAt: sessionCreatedAt.value,
   participant: {
-    id: props.participant.id.trim(),
-    notes: props.participant.notes.trim(),
+    id: sessionParticipant.id,
+    notes: sessionParticipant.notes,
   },
   referenceSize: REFERENCE_SIZE,
   trials: completedTrials.value,
@@ -283,6 +287,8 @@ onBeforeUnmount(() => {
 });
 
 function initializeExperiment() {
+  sessionParticipant.id = props.participant.id.trim();
+  sessionParticipant.notes = props.participant.notes.trim();
   currentSessionId.value = createSessionId();
   sessionCreatedAt.value = new Date().toISOString();
   activeMode.value = "circle";
@@ -323,7 +329,7 @@ function shuffle<T>(items: T[]) {
 }
 
 function createSessionId() {
-  const participantId = slugify(props.participant.id || "participant");
+  const participantId = slugify(sessionParticipant.id || "participant");
   return `${new Date().toISOString()}--${participantId}`;
 }
 
@@ -404,7 +410,7 @@ function confirmTrial() {
 
   completedTrials.value.push({
     sessionId: currentSessionId.value,
-    participantId: props.participant.id.trim(),
+    participantId: sessionParticipant.id,
     timestamp: new Date().toISOString(),
     shape: currentTrial.value.shape,
     targetRatio: currentTrial.value.targetRatio,
