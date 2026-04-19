@@ -1,75 +1,67 @@
-# Nuxt Minimal Starter
+# Exercise 1: Perceived Area Experiment
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+This project is a Nuxt-based web application for Exercise 1 of Visualization SS26. It supports an experiment that measures how people perceive the size of geometric shapes and helps estimate the perception exponent `x` for different participants.
 
-## Setup
+## Task Context
 
-Make sure to install dependencies:
+In data visualization, shapes such as circles and squares are often used to represent numeric values. The assignment is based on the observation that the perceived size of a shape is not always proportional to its actual area.
+
+For circles, the following relationship is assumed:
+
+```text
+perceived size ratio = (actual area ratio)^x
+```
+
+The value of `x` can vary slightly from person to person. The goal of this exercise is to design and implement a program that can measure `x` for test participants.
+
+The assignment requires:
+
+- developing a strategy to measure `x`
+- implementing the program for circles and squares
+- running a measurement series with one or more participants
+- visualizing the resulting measurements in a suitable way
+
+## Project Overview
+
+The application presents an interactive perceived-area study. Participants compare shapes and adjust them until they believe a target size relationship has been matched. The collected responses can then be used to estimate the personal perception exponent `x` for each participant and compare results across shape types.
+
+## Tech Stack
+
+- Nuxt 4 (Vue.js framework)
+- Vuetify
+
+## Prerequisites
+
+Before running the application, make sure Node.js is installed on your machine.
+
+## Installation
+
+Install the project dependencies from the repository root:
 
 ```bash
-# npm
 npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
 ```
 
-## Development Server
+## Running The Application
 
-Start the development server on `http://localhost:3000`:
+Start the development server:
 
 ```bash
-# npm
 npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
 ```
 
-## Production
+The app will then be available at `http://localhost:3000`.
 
-Build the application for production:
+## Build And Preview
+
+Create a production build:
 
 ```bash
-# npm
 npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
 ```
 
-Locally preview production build:
+Preview the production build locally:
 
 ```bash
-# npm
 npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
 ```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
