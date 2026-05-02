@@ -4,6 +4,11 @@
       "name": "Excercise 1️⃣",
       "path": "excercise_1",
     },
+    {
+      "name": "Excercise 2️⃣",
+      "path": "excercise_2",
+    },
+
   ],
   "settings": {
     "editor.formatOnSave": true,
