@@ -10,7 +10,8 @@
           </h3>
           <p class="text-body-2 text-medium-emphasis mb-0">
             Compare the fixed reference on the left with the adjustable shape on
-            the right, then drag the handle until the perceptual match feels correct.
+            the right, then drag the handle until the perceptual match feels
+            correct.
           </p>
         </div>
 
@@ -63,7 +64,13 @@
           @pointercancel="onPointerUp"
           @pointerleave="onPointerUp"
         >
-          <line x1="400" y1="36" x2="400" y2="324" class="trial-canvas__divider" />
+          <line
+            x1="400"
+            y1="36"
+            x2="400"
+            y2="324"
+            class="trial-canvas__divider"
+          />
 
           <text x="220" y="38" text-anchor="middle" class="trial-canvas__label">
             Reference
@@ -293,8 +300,11 @@ const currentHandlePosition = computed(() =>
 }
 
 .canvas-panel {
-  background:
-    linear-gradient(180deg, rgba(9, 19, 26, 0.92), rgba(11, 21, 29, 0.98));
+  background: linear-gradient(
+    180deg,
+    rgba(9, 19, 26, 0.92),
+    rgba(11, 21, 29, 0.98)
+  );
   border: 1px solid rgba(230, 241, 244, 0.08);
 }
 
