@@ -28,15 +28,7 @@
           The stimulus appears briefly. After it disappears, choose the field
           where the target was shown.
         </div>
-        <v-btn
-          color="primary"
-          prepend-icon="mdi-play"
-          size="large"
-          class="mt-1"
-          @click="beginTrial"
-        >
-          Ready
-        </v-btn>
+        <countdown-ready-button @complete="beginTrial" />
       </div>
     </v-sheet>
 
