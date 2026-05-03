@@ -3,15 +3,13 @@
     <v-form @submit.prevent="startExperiment">
       <div class="setup-header">
         <div>
-          <div class="section-kicker text-caption mb-2">
-            Guided experiment
-          </div>
+          <div class="section-kicker text-caption mb-2">Guided experiment</div>
           <div class="setup-title text-h3 font-weight-bold mb-3">
             Preattentive perception test
           </div>
           <div class="setup-copy text-body-1 text-medium-emphasis">
             Configure one stimulus condition, run a short sequence of trials,
-            and compare results.
+            and view the results.
           </div>
         </div>
         <v-chip
@@ -146,8 +144,8 @@
               label="Conjunction search"
             />
             <div class="text-caption text-medium-emphasis mt-1">
-              Target is defined by a combination of properties; distractors share
-              one of them.
+              Target is defined by a combination of properties; distractors
+              share one of them.
             </div>
           </div>
         </v-col>
