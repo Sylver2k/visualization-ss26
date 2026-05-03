@@ -1,8 +1,5 @@
 <template>
-  <div class="text-h3 text-center">
-    Hello World
-    <v-btn variant="outlined" color="teal">Don't press me</v-btn>
-  </div>
+  <experiment-container />
 </template>
 
 <script setup lang="ts"></script>
