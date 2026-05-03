@@ -10,3 +10,8 @@ Design and implement a program to measure the perception exponent `x` for circle
 
 Folder: [`excercise_1`](https://github.com/Sylver2k/visualization-ss26/tree/main/excercise_1)
 
+### Exercise 2: Preattentive perception test
+
+Design and implement a program to test whether differente visual object properties can be perceived pre-attentively.
+
+Folder: [`excercise_2`](https://github.com/Sylver2k/visualization-ss26/tree/main/excercise_2)
