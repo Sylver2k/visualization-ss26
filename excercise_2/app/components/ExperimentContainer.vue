@@ -4,9 +4,8 @@
 
     <v-sheet
       v-else-if="stage === 'ready'"
-      class="experiment-panel"
-      border
-      rounded="lg"
+      class="experiment-panel glass-panel"
+      rounded="xl"
     >
       <div class="experiment-toolbar">
         <v-btn prepend-icon="mdi-cog" variant="text" @click="resetToSetup">
@@ -19,11 +18,13 @@
       </div>
 
       <div class="ready-state">
-        <v-icon color="primary" icon="mdi-eye-check-outline" size="56" />
-        <div class="text-h4 font-weight-bold mt-4">
+        <div class="state-icon">
+          <v-icon color="primary" icon="mdi-eye-check-outline" size="58" />
+        </div>
+        <div class="state-title text-h4 font-weight-bold mt-4">
           Ready for the next stimulus?
         </div>
-        <div class="text-body-1 text-medium-emphasis">
+        <div class="state-copy text-body-1 text-medium-emphasis">
           The stimulus appears briefly. After it disappears, choose the field
           where the target was shown.
         </div>
@@ -31,6 +32,7 @@
           color="primary"
           prepend-icon="mdi-play"
           size="large"
+          class="mt-1"
           @click="beginTrial"
         >
           Ready
@@ -40,16 +42,17 @@
 
     <v-sheet
       v-else-if="stage === 'stimulus' || stage === 'answer'"
-      class="experiment-panel"
-      border
-      rounded="lg"
+      class="experiment-panel glass-panel"
+      rounded="xl"
     >
       <div class="experiment-toolbar">
         <div>
-          <div class="text-overline text-medium-emphasis mb-0">
+          <div class="section-kicker text-caption mb-1">
             Trial {{ trialNumber }}
           </div>
-          <div class="text-h6 font-weight-bold">{{ conditionLabel }}</div>
+          <div class="trial-title text-h5 font-weight-bold">
+            {{ conditionLabel }}
+          </div>
         </div>
         <v-chip
           :color="stage === 'stimulus' ? 'primary' : 'surface-variant'"
@@ -62,6 +65,17 @@
         </v-chip>
       </div>
 
+      <v-progress-linear
+        :model-value="progressPercent"
+        bg-color="surface-variant"
+        bg-opacity="1"
+        class="trial-progress mb-6"
+        color="primary"
+        height="8"
+        rounded
+        rounded-bar
+      />
+
       <experiment-arena
         :answer-enabled="stage === 'answer'"
         :columns="arenaColumns"
@@ -70,59 +84,65 @@
         @choose="chooseSide"
       />
 
-      <div
-        v-if="stage === 'answer'"
-        class="d-flex align-center justify-center ga-4 mt-6"
-      >
-        <v-btn
-          color="primary"
-          prepend-icon="mdi-arrow-left"
-          size="large"
-          @click="chooseSide('left')"
+      <v-slide-y-transition>
+        <div
+          v-if="stage === 'answer'"
+          class="answer-actions d-flex align-center justify-center ga-4 mt-6"
         >
-          Left field
-        </v-btn>
+          <v-btn
+            color="primary"
+            prepend-icon="mdi-arrow-left"
+            size="large"
+            @click="chooseSide('left')"
+          >
+            Left field
+          </v-btn>
 
-        <v-btn
-          color="primary"
-          variant="outlined"
-          size="large"
-          @click="chooseSide('none')"
-        >
-          I don't know
-        </v-btn>
+          <v-btn
+            color="primary"
+            variant="outlined"
+            size="large"
+            @click="chooseSide('none')"
+          >
+            I don't know
+          </v-btn>
 
-        <v-btn
-          color="primary"
-          append-icon="mdi-arrow-right"
-          size="large"
-          @click="chooseSide('right')"
-        >
-          Right field
-        </v-btn>
-      </div>
+          <v-btn
+            color="primary"
+            append-icon="mdi-arrow-right"
+            size="large"
+            @click="chooseSide('right')"
+          >
+            Right field
+          </v-btn>
+        </div>
+      </v-slide-y-transition>
     </v-sheet>
 
     <v-sheet
       v-else-if="stage === 'feedback'"
-      class="experiment-panel"
-      border
-      rounded="lg"
+      class="experiment-panel glass-panel"
+      rounded="xl"
     >
       <div class="feedback-state">
-        <v-icon
-          :color="lastResult?.correct ? 'success' : 'error'"
-          :icon="
-            lastResult?.correct
-              ? 'mdi-check-circle-outline'
-              : 'mdi-close-circle-outline'
-          "
-          size="64"
-        />
-        <div class="text-h4 font-weight-bold mt-4">
+        <div
+          class="state-icon"
+          :class="lastResult?.correct ? 'is-correct' : 'is-wrong'"
+        >
+          <v-icon
+            :color="lastResult?.correct ? 'success' : 'error'"
+            :icon="
+              lastResult?.correct
+                ? 'mdi-check-circle-outline'
+                : 'mdi-close-circle-outline'
+            "
+            size="66"
+          />
+        </div>
+        <div class="state-title text-h4 font-weight-bold mt-4">
           {{ lastResult?.correct ? "Correct" : "Not quite" }}
         </div>
-        <div class="text-body-1 text-medium-emphasis">
+        <div class="state-copy text-body-1 text-medium-emphasis">
           Target was in the
           {{ sideLabel(lastResult?.targetSide ?? "left").toLowerCase() }}.
         </div>
@@ -196,12 +216,15 @@ const conditionLabel = computed(() => {
   if (settings.value.conjunction) {
     parts.push("conjunction search");
   }
-  return parts.join(" · ");
+  return parts.join(" - ");
 });
 
 const lastResult = computed(() => results.value.at(-1));
 const isFinished = computed(
   () => results.value.length >= settings.value.trials,
+);
+const progressPercent = computed(
+  () => (trialNumber.value / settings.value.trials) * 100,
 );
 
 onBeforeUnmount(() => {
@@ -334,7 +357,12 @@ function createTarget(config: ExperimentSettings): StimulusItem {
   const targetByFeature: Record<Feature, StimulusItem> = {
     color: { shape: "circle", color: TARGET_COLOR, size: 22, rotation: 0 },
     shape: { shape: TARGET_SHAPE, color: BASE_COLOR, size: 24, rotation: 0 },
-    size: { shape: "circle", color: BASE_COLOR, size: TARGET_SIZE, rotation: 0 },
+    size: {
+      shape: "circle",
+      color: BASE_COLOR,
+      size: TARGET_SIZE,
+      rotation: 0,
+    },
     diagonal: {
       shape: "bar",
       color: BASE_COLOR,
@@ -357,7 +385,12 @@ function createDistractor(
     color: { shape: "circle", color: BASE_COLOR, size: 22, rotation: 0 },
     shape: { shape: "circle", color: BASE_COLOR, size: 24, rotation: 0 },
     size: { shape: "circle", color: BASE_COLOR, size: 22, rotation: 0 },
-    diagonal: { shape: "bar", color: BASE_COLOR, size: TARGET_SIZE, rotation: 0 },
+    diagonal: {
+      shape: "bar",
+      color: BASE_COLOR,
+      size: TARGET_SIZE,
+      rotation: 0,
+    },
   };
 
   return applyDistractorDiversity(baseByFeature[config.feature], config, index);
@@ -383,10 +416,9 @@ function createConjunctionDistractor(
   return ensureDistractorSafety(banks.high[index % banks.high.length], config);
 }
 
-function createConjunctionDistractorBanks(feature: Feature): Record<
-  Diversity,
-  StimulusItem[]
-> {
+function createConjunctionDistractorBanks(
+  feature: Feature,
+): Record<Diversity, StimulusItem[]> {
   const colorShapeLow: StimulusItem[] = [
     { shape: TARGET_SHAPE, color: "#1565c0", size: 24, rotation: 0 },
     { shape: "circle", color: TARGET_COLOR, size: 24, rotation: 0 },
@@ -547,10 +579,7 @@ function createMediumDistractor(
     mediumItem.size = item.size + sizeOffsets[index % sizeOffsets.length];
   }
 
-  return ensureDistractorSafety(
-    mediumItem,
-    config,
-  );
+  return ensureDistractorSafety(mediumItem, config);
 }
 
 function createHighDistractor(
@@ -627,6 +656,7 @@ function shuffle<T>(items: T[]) {
 }
 
 .experiment-panel {
+  overflow: hidden;
   padding: 32px;
 }
 
@@ -638,13 +668,44 @@ function shuffle<T>(items: T[]) {
   margin-bottom: 28px;
 }
 
+.trial-title,
+.state-title {
+  color: rgb(var(--v-theme-on-surface));
+  letter-spacing: 0;
+}
+
+.trial-progress {
+  box-shadow: inset 0 0 0 1px rgba(var(--v-border-color), 0.45);
+}
+
 .ready-state,
 .feedback-state {
   display: grid;
   justify-items: center;
-  gap: 12px;
-  min-height: 420px;
+  gap: 14px;
+  min-height: 430px;
   place-content: center;
   text-align: center;
+}
+
+.state-icon {
+  background: rgba(var(--v-theme-primary), 0.1);
+  border-radius: 50%;
+  display: grid;
+  height: 100px;
+  place-items: center;
+  width: 100px;
+}
+
+.state-icon.is-correct {
+  background: rgba(var(--v-theme-success), 0.12);
+}
+
+.state-icon.is-wrong {
+  background: rgba(var(--v-theme-error), 0.1);
+}
+
+.state-copy {
+  max-width: 560px;
 }
 </style>

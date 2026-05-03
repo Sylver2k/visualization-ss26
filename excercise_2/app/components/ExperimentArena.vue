@@ -50,7 +50,7 @@ function sideLabel(side: Side) {
 <style scoped>
 .arena {
   display: grid;
-  gap: 18px;
+  gap: 20px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 </style>

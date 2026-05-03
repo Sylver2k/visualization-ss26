@@ -77,22 +77,33 @@ function objectStyle(item: StimulusItem) {
 
 <style scoped>
 .field-button {
-  background: rgb(var(--v-theme-surface));
+  background: #ffffff;
   border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  border-radius: 8px;
+  border-radius: 14px;
   color: inherit;
   cursor: pointer;
+  display: block;
   min-height: 420px;
   padding: 18px;
   text-align: left;
   transition:
+    background-color 160ms ease,
     border-color 160ms ease,
-    box-shadow 160ms ease;
+    box-shadow 160ms ease,
+    transform 160ms ease;
+  width: 100%;
 }
 
 .field-button:not(:disabled):hover {
   border-color: rgb(var(--v-theme-primary));
-  box-shadow: 0 0 0 3px rgba(var(--v-theme-primary), 0.12);
+  box-shadow: 0 12px 36px rgba(37, 99, 235, 0.13);
+  transform: translateY(-1px);
+}
+
+.field-button:not(:disabled):focus-visible {
+  border-color: rgb(var(--v-theme-primary));
+  box-shadow: 0 0 0 4px rgba(var(--v-theme-primary), 0.18);
+  outline: none;
 }
 
 .field-button:disabled {
@@ -100,6 +111,7 @@ function objectStyle(item: StimulusItem) {
 }
 
 .field-label {
+  color: rgb(var(--v-theme-on-surface-variant));
   display: block;
   font-size: 0.78rem;
   font-weight: 700;
@@ -109,10 +121,16 @@ function objectStyle(item: StimulusItem) {
 }
 
 .stimulus-grid {
+  background:
+    linear-gradient(rgba(23, 32, 51, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23, 32, 51, 0.03) 1px, transparent 1px);
+  background-size: 38px 38px;
+  border-radius: 10px;
   display: grid;
   gap: 12px;
   height: calc(100% - 30px);
   place-items: center;
+  padding: 8px;
 }
 
 .stimulus-cell {
@@ -124,6 +142,7 @@ function objectStyle(item: StimulusItem) {
 
 .stimulus-object {
   display: block;
+  box-shadow: 0 1px 1px rgba(23, 32, 51, 0.08);
   transition: opacity 120ms ease;
 }
 
@@ -146,11 +165,5 @@ function objectStyle(item: StimulusItem) {
 .shape-square,
 .shape-bar {
   border-radius: 2px;
-}
-
-@media (max-width: 820px) {
-  .field-button {
-    min-height: 300px;
-  }
 }
 </style>

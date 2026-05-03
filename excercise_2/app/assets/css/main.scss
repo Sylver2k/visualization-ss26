@@ -10,6 +10,37 @@ html {
   overflow-y: auto;
 }
 
+html,
+body,
+#__nuxt {
+  min-height: 100%;
+}
+
 body {
   background: rgb(var(--v-theme-background));
+  color: rgb(var(--v-theme-on-background));
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+.experiment-backdrop {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(var(--v-theme-primary), 0.1), transparent 34rem),
+    linear-gradient(180deg, #f7fbff 0%, rgb(var(--v-theme-background)) 42%, #eef5f8 100%);
+}
+
+.experiment-container {
+  max-width: 1240px;
+}
+
+.glass-panel {
+  border: 1px solid rgba(var(--v-theme-primary), 0.08);
+  box-shadow: 0 22px 70px rgba(29, 47, 75, 0.12);
+}
+
+.section-kicker {
+  color: rgb(var(--v-theme-primary));
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
 }
