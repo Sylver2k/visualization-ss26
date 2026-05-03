@@ -301,7 +301,34 @@ function createField(config: ExperimentSettings, includeTarget: boolean) {
 
 function createTarget(config: ExperimentSettings): StimulusItem {
   if (config.conjunction) {
-    return { shape: TARGET_SHAPE, color: TARGET_COLOR, size: 24, rotation: 0 };
+    const conjunctionTargetByFeature: Record<Feature, StimulusItem> = {
+      color: {
+        shape: TARGET_SHAPE,
+        color: TARGET_COLOR,
+        size: 24,
+        rotation: 0,
+      },
+      shape: {
+        shape: TARGET_SHAPE,
+        color: TARGET_COLOR,
+        size: 24,
+        rotation: 0,
+      },
+      size: {
+        shape: "circle",
+        color: TARGET_COLOR,
+        size: TARGET_SIZE,
+        rotation: 0,
+      },
+      diagonal: {
+        shape: "bar",
+        color: TARGET_COLOR,
+        size: TARGET_SIZE,
+        rotation: TARGET_ROTATION,
+      },
+    };
+
+    return conjunctionTargetByFeature[config.feature];
   }
 
   const targetByFeature: Record<Feature, StimulusItem> = {
@@ -340,26 +367,38 @@ function createConjunctionDistractor(
   config: ExperimentSettings,
   index: number,
 ): StimulusItem {
-  const lowBank: StimulusItem[] = [
+  const banks = createConjunctionDistractorBanks(config.feature);
+
+  if (config.diversity === "low") {
+    return { ...banks.low[index % banks.low.length] };
+  }
+
+  if (config.diversity === "medium") {
+    return ensureDistractorSafety(
+      banks.medium[index % banks.medium.length],
+      config,
+    );
+  }
+
+  return ensureDistractorSafety(banks.high[index % banks.high.length], config);
+}
+
+function createConjunctionDistractorBanks(feature: Feature): Record<
+  Diversity,
+  StimulusItem[]
+> {
+  const colorShapeLow: StimulusItem[] = [
     { shape: TARGET_SHAPE, color: "#1565c0", size: 24, rotation: 0 },
     { shape: "circle", color: TARGET_COLOR, size: 24, rotation: 0 },
   ];
 
-  if (config.diversity === "low") {
-    return { ...lowBank[index % lowBank.length] };
-  }
-
-  const mediumBank: StimulusItem[] = [
-    ...lowBank,
+  const colorShapeMedium: StimulusItem[] = [
+    ...colorShapeLow,
     { shape: TARGET_SHAPE, color: "#00695c", size: 22, rotation: 0 },
     { shape: "square", color: TARGET_COLOR, size: 24, rotation: 0 },
   ];
 
-  if (config.diversity === "medium") {
-    return { ...mediumBank[index % mediumBank.length] };
-  }
-
-  const highBank: StimulusItem[] = [
+  const colorShapeHigh: StimulusItem[] = [
     { shape: TARGET_SHAPE, color: "#0072b2", size: 18, rotation: 0 },
     { shape: TARGET_SHAPE, color: "#009e73", size: 24, rotation: 0 },
     { shape: TARGET_SHAPE, color: "#e69f00", size: 30, rotation: 0 },
@@ -370,7 +409,93 @@ function createConjunctionDistractor(
     { shape: "bar", color: TARGET_COLOR, size: 28, rotation: 90 },
   ];
 
-  return ensureDistractorSafety(highBank[index % highBank.length], config);
+  const sizeLow: StimulusItem[] = [
+    { shape: "circle", color: "#1565c0", size: TARGET_SIZE, rotation: 0 },
+    { shape: "circle", color: TARGET_COLOR, size: 22, rotation: 0 },
+  ];
+
+  const sizeMedium: StimulusItem[] = [
+    ...sizeLow,
+    { shape: "square", color: "#00695c", size: TARGET_SIZE, rotation: 0 },
+    { shape: "diamond", color: TARGET_COLOR, size: 24, rotation: 0 },
+  ];
+
+  const sizeHigh: StimulusItem[] = [
+    { shape: "circle", color: "#0072b2", size: TARGET_SIZE, rotation: 0 },
+    { shape: "square", color: "#009e73", size: TARGET_SIZE, rotation: 0 },
+    { shape: "diamond", color: "#e69f00", size: TARGET_SIZE, rotation: 0 },
+    { shape: "bar", color: "#cc79a7", size: TARGET_SIZE, rotation: 90 },
+    { shape: "circle", color: TARGET_COLOR, size: 14, rotation: 0 },
+    { shape: "square", color: TARGET_COLOR, size: 18, rotation: 0 },
+    { shape: "diamond", color: TARGET_COLOR, size: 26, rotation: 0 },
+    { shape: "bar", color: TARGET_COLOR, size: 30, rotation: 90 },
+  ];
+
+  const diagonalLow: StimulusItem[] = [
+    {
+      shape: "bar",
+      color: "#1565c0",
+      size: TARGET_SIZE,
+      rotation: TARGET_ROTATION,
+    },
+    { shape: "bar", color: TARGET_COLOR, size: TARGET_SIZE, rotation: 0 },
+  ];
+
+  const diagonalMedium: StimulusItem[] = [
+    ...diagonalLow,
+    {
+      shape: "bar",
+      color: "#00695c",
+      size: 28,
+      rotation: TARGET_ROTATION,
+    },
+    { shape: "bar", color: TARGET_COLOR, size: 30, rotation: 90 },
+  ];
+
+  const diagonalHigh: StimulusItem[] = [
+    {
+      shape: "bar",
+      color: "#0072b2",
+      size: 18,
+      rotation: TARGET_ROTATION,
+    },
+    {
+      shape: "bar",
+      color: "#009e73",
+      size: 24,
+      rotation: TARGET_ROTATION,
+    },
+    {
+      shape: "bar",
+      color: "#e69f00",
+      size: 30,
+      rotation: TARGET_ROTATION,
+    },
+    {
+      shape: "bar",
+      color: "#cc79a7",
+      size: TARGET_SIZE,
+      rotation: TARGET_ROTATION,
+    },
+    { shape: "bar", color: TARGET_COLOR, size: 18, rotation: 0 },
+    { shape: "bar", color: TARGET_COLOR, size: 24, rotation: 90 },
+    { shape: "bar", color: TARGET_COLOR, size: 30, rotation: 135 },
+    { shape: "bar", color: TARGET_COLOR, size: TARGET_SIZE, rotation: 0 },
+  ];
+
+  if (feature === "size") {
+    return { low: sizeLow, medium: sizeMedium, high: sizeHigh };
+  }
+
+  if (feature === "diagonal") {
+    return { low: diagonalLow, medium: diagonalMedium, high: diagonalHigh };
+  }
+
+  return {
+    low: colorShapeLow,
+    medium: colorShapeMedium,
+    high: colorShapeHigh,
+  };
 }
 
 function applyDistractorDiversity(
@@ -467,7 +592,17 @@ function ensureDistractorSafety(
 
 function isTargetEquivalent(item: StimulusItem, config: ExperimentSettings) {
   if (config.conjunction) {
-    return item.shape === TARGET_SHAPE && item.color === TARGET_COLOR;
+    const conjunctionTargetCheckByFeature: Record<Feature, boolean> = {
+      color: item.color === TARGET_COLOR && item.shape === TARGET_SHAPE,
+      shape: item.color === TARGET_COLOR && item.shape === TARGET_SHAPE,
+      size: item.color === TARGET_COLOR && item.size === TARGET_SIZE,
+      diagonal:
+        item.color === TARGET_COLOR &&
+        item.shape === "bar" &&
+        item.rotation === TARGET_ROTATION,
+    };
+
+    return conjunctionTargetCheckByFeature[config.feature];
   }
 
   const targetCheckByFeature: Record<Feature, boolean> = {
