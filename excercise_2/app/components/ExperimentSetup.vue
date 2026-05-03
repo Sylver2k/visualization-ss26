@@ -170,14 +170,14 @@ const featureOptions = [
 
 const diversityOptions = [
   { title: "Low - uniform distractors", value: "low" },
-  { title: "Medium - mild variation", value: "medium" },
-  { title: "High - varied distractors", value: "high" },
+  { title: "Medium - mild distractor differences", value: "medium" },
+  { title: "High - strong distractor differences", value: "high" },
 ];
 
 function startExperiment() {
   emit("start", {
     feature: draft.feature,
-    displayMs: clamp(draft.displayMs, 50, 1500),
+    displayMs: clamp(draft.displayMs, 50, 5000),
     conjunction: draft.conjunction,
     diversity: draft.diversity,
     itemCount: clamp(draft.itemCount, 12, 48),

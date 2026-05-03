@@ -156,6 +156,29 @@ const defaultSettings: ExperimentSettings = {
   trials: 8,
 };
 
+const TARGET_COLOR = "#e53935";
+const BASE_COLOR = "#263238";
+const TARGET_SHAPE: Shape = "triangle";
+const TARGET_SIZE = 34;
+const TARGET_ROTATION = 45;
+
+const MEDIUM_COLORS = [BASE_COLOR, "#455a64", "#00695c"];
+const HIGH_COLORS = [
+  "#0072b2",
+  "#009e73",
+  "#e69f00",
+  "#cc79a7",
+  "#56b4e9",
+  "#f0e442",
+  "#111827",
+];
+const MEDIUM_SHAPES: Shape[] = ["circle", "square"];
+const HIGH_SHAPES: Shape[] = ["circle", "square", "diamond", "bar"];
+const MEDIUM_SIZES = [20, 22, 24, 26];
+const HIGH_SIZES = [14, 18, 22, 26, 30];
+const MEDIUM_ROTATIONS = [0, 90];
+const HIGH_ROTATIONS = [0, 30, 90, 135];
+
 const stage = ref<Stage>("setup");
 const settings = ref<ExperimentSettings>({ ...defaultSettings });
 const currentStimulus = ref<Stimulus | null>(null);
@@ -265,8 +288,8 @@ function createStimulus(config: ExperimentSettings): Stimulus {
 }
 
 function createField(config: ExperimentSettings, includeTarget: boolean) {
-  const items = Array.from({ length: config.itemCount }, () =>
-    createDistractor(config),
+  const items = Array.from({ length: config.itemCount }, (_, index) =>
+    createDistractor(config, index),
   );
 
   if (includeTarget) {
@@ -278,76 +301,183 @@ function createField(config: ExperimentSettings, includeTarget: boolean) {
 
 function createTarget(config: ExperimentSettings): StimulusItem {
   if (config.conjunction) {
-    return { shape: "triangle", color: "#e53935", size: 24, rotation: 0 };
+    return { shape: TARGET_SHAPE, color: TARGET_COLOR, size: 24, rotation: 0 };
   }
 
   const targetByFeature: Record<Feature, StimulusItem> = {
-    color: { shape: "circle", color: "#e53935", size: 22, rotation: 0 },
-    shape: { shape: "triangle", color: "#263238", size: 24, rotation: 0 },
-    size: { shape: "circle", color: "#263238", size: 34, rotation: 0 },
-    diagonal: { shape: "bar", color: "#263238", size: 34, rotation: 45 },
+    color: { shape: "circle", color: TARGET_COLOR, size: 22, rotation: 0 },
+    shape: { shape: TARGET_SHAPE, color: BASE_COLOR, size: 24, rotation: 0 },
+    size: { shape: "circle", color: BASE_COLOR, size: TARGET_SIZE, rotation: 0 },
+    diagonal: {
+      shape: "bar",
+      color: BASE_COLOR,
+      size: TARGET_SIZE,
+      rotation: TARGET_ROTATION,
+    },
   };
   return targetByFeature[config.feature];
 }
 
-function createDistractor(config: ExperimentSettings): StimulusItem {
+function createDistractor(
+  config: ExperimentSettings,
+  index: number,
+): StimulusItem {
   if (config.conjunction) {
-    return Math.random() > 0.5
-      ? varyDistractor(
-          { shape: "triangle", color: "#1565c0", size: 24, rotation: 0 },
-          config,
-        )
-      : varyDistractor(
-          { shape: "circle", color: "#e53935", size: 24, rotation: 0 },
-          config,
-        );
+    return createConjunctionDistractor(config, index);
   }
 
   const baseByFeature: Record<Feature, StimulusItem> = {
-    color: { shape: "circle", color: "#263238", size: 22, rotation: 0 },
-    shape: { shape: "circle", color: "#263238", size: 24, rotation: 0 },
-    size: { shape: "circle", color: "#263238", size: 22, rotation: 0 },
-    diagonal: { shape: "bar", color: "#263238", size: 34, rotation: 0 },
+    color: { shape: "circle", color: BASE_COLOR, size: 22, rotation: 0 },
+    shape: { shape: "circle", color: BASE_COLOR, size: 24, rotation: 0 },
+    size: { shape: "circle", color: BASE_COLOR, size: 22, rotation: 0 },
+    diagonal: { shape: "bar", color: BASE_COLOR, size: TARGET_SIZE, rotation: 0 },
   };
 
-  return varyDistractor(baseByFeature[config.feature], config);
+  return applyDistractorDiversity(baseByFeature[config.feature], config, index);
 }
 
-function varyDistractor(
+function createConjunctionDistractor(
+  config: ExperimentSettings,
+  index: number,
+): StimulusItem {
+  const lowBank: StimulusItem[] = [
+    { shape: TARGET_SHAPE, color: "#1565c0", size: 24, rotation: 0 },
+    { shape: "circle", color: TARGET_COLOR, size: 24, rotation: 0 },
+  ];
+
+  if (config.diversity === "low") {
+    return { ...lowBank[index % lowBank.length] };
+  }
+
+  const mediumBank: StimulusItem[] = [
+    ...lowBank,
+    { shape: TARGET_SHAPE, color: "#00695c", size: 22, rotation: 0 },
+    { shape: "square", color: TARGET_COLOR, size: 24, rotation: 0 },
+  ];
+
+  if (config.diversity === "medium") {
+    return { ...mediumBank[index % mediumBank.length] };
+  }
+
+  const highBank: StimulusItem[] = [
+    { shape: TARGET_SHAPE, color: "#0072b2", size: 18, rotation: 0 },
+    { shape: TARGET_SHAPE, color: "#009e73", size: 24, rotation: 0 },
+    { shape: TARGET_SHAPE, color: "#e69f00", size: 30, rotation: 0 },
+    { shape: TARGET_SHAPE, color: "#cc79a7", size: 22, rotation: 0 },
+    { shape: "circle", color: TARGET_COLOR, size: 18, rotation: 0 },
+    { shape: "square", color: TARGET_COLOR, size: 26, rotation: 0 },
+    { shape: "diamond", color: TARGET_COLOR, size: 30, rotation: 0 },
+    { shape: "bar", color: TARGET_COLOR, size: 28, rotation: 90 },
+  ];
+
+  return ensureDistractorSafety(highBank[index % highBank.length], config);
+}
+
+function applyDistractorDiversity(
   item: StimulusItem,
   config: ExperimentSettings,
+  index: number,
 ): StimulusItem {
   if (config.diversity === "low") {
     return { ...item };
   }
 
-  const colors = ["#263238", "#455a64", "#00695c", "#5d4037"];
-  const shapes: Shape[] = ["circle", "square", "diamond"];
-  const rotations = [0, 90, 180];
-  const mediumVariation = Math.random() > 0.72;
+  if (config.diversity === "medium") {
+    return createMediumDistractor(item, config, index);
+  }
 
-  if (config.diversity === "medium" && !mediumVariation) {
+  return createHighDistractor(config, index);
+}
+
+function createMediumDistractor(
+  item: StimulusItem,
+  config: ExperimentSettings,
+  index: number,
+): StimulusItem {
+  if (index % 3 !== 0) {
     return { ...item };
   }
 
-  return {
-    ...item,
-    color: config.feature === "color" ? item.color : randomItem(colors),
-    rotation:
-      config.feature === "diagonal" ? item.rotation : randomItem(rotations),
-    shape:
-      config.feature === "shape" || item.shape === "bar"
-        ? item.shape
-        : randomItem(shapes),
-    size:
-      config.feature === "size"
-        ? item.size
-        : item.size + randomItem([-4, 0, 4]),
-  };
+  const sizeOffsets = [-2, 0, 2];
+  const mediumItem = { ...item };
+
+  if (config.feature === "color") {
+    mediumItem.color = MEDIUM_COLORS[index % MEDIUM_COLORS.length];
+    mediumItem.size = item.size + sizeOffsets[index % sizeOffsets.length];
+  }
+
+  if (config.feature === "shape") {
+    mediumItem.color = MEDIUM_COLORS[index % MEDIUM_COLORS.length];
+    mediumItem.shape = MEDIUM_SHAPES[index % MEDIUM_SHAPES.length];
+  }
+
+  if (config.feature === "size") {
+    mediumItem.color = MEDIUM_COLORS[index % MEDIUM_COLORS.length];
+    mediumItem.size = MEDIUM_SIZES[index % MEDIUM_SIZES.length];
+  }
+
+  if (config.feature === "diagonal") {
+    mediumItem.color = MEDIUM_COLORS[index % MEDIUM_COLORS.length];
+    mediumItem.rotation = MEDIUM_ROTATIONS[index % MEDIUM_ROTATIONS.length];
+    mediumItem.size = item.size + sizeOffsets[index % sizeOffsets.length];
+  }
+
+  return ensureDistractorSafety(
+    mediumItem,
+    config,
+  );
 }
 
-function randomItem<T>(items: T[]) {
-  return items[Math.floor(Math.random() * items.length)];
+function createHighDistractor(
+  config: ExperimentSettings,
+  index: number,
+): StimulusItem {
+  return ensureDistractorSafety(
+    {
+      color: HIGH_COLORS[index % HIGH_COLORS.length],
+      rotation: HIGH_ROTATIONS[(index * 5) % HIGH_ROTATIONS.length],
+      shape: HIGH_SHAPES[(index * 3) % HIGH_SHAPES.length],
+      size: HIGH_SIZES[(index * 2) % HIGH_SIZES.length],
+    },
+    config,
+  );
+}
+
+function ensureDistractorSafety(
+  item: StimulusItem,
+  config: ExperimentSettings,
+): StimulusItem {
+  if (!isTargetEquivalent(item, config)) {
+    return { ...item };
+  }
+
+  if (config.conjunction) {
+    return { ...item, color: "#0072b2" };
+  }
+
+  const safeFallbackByFeature: Record<Feature, Partial<StimulusItem>> = {
+    color: { color: "#0072b2" },
+    shape: { shape: "circle" },
+    size: { size: 26 },
+    diagonal: { rotation: 0 },
+  };
+
+  return { ...item, ...safeFallbackByFeature[config.feature] };
+}
+
+function isTargetEquivalent(item: StimulusItem, config: ExperimentSettings) {
+  if (config.conjunction) {
+    return item.shape === TARGET_SHAPE && item.color === TARGET_COLOR;
+  }
+
+  const targetCheckByFeature: Record<Feature, boolean> = {
+    color: item.color === TARGET_COLOR,
+    shape: item.shape === TARGET_SHAPE,
+    size: item.size === TARGET_SIZE,
+    diagonal: item.shape === "bar" && item.rotation === TARGET_ROTATION,
+  };
+
+  return targetCheckByFeature[config.feature];
 }
 
 function shuffle<T>(items: T[]) {
