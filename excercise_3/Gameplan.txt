@@ -1,0 +1,59 @@
+|# Gameplan zur Visualisierung des Datensatzes
+
+Ziel ist die interaktive Visualisierung des Auto Datensatzes mit geeigneten Glyphen. Mehrere Attribute eines Autos sollen gleichzeitig sichtbar und untereinander vergleichbar sein.
+
+
+- Die Attribute aus dem Datensatz werden in zwei Gruppen aufgeteilt: 
+  - Statisch sichtbare Hardware- und Identifikationsmerkmale: CAR, MANUFACTURER, ORIGIN, CYLINDERS
+  - Vergleichbare numerische Kennzahlen: MPG, DISPLACEMENT, HORSEPOWER, WEIGHT, ACCELERATION, 
+- Nicht alle Attribute werden gleichzeitig als Achsen dargestellt
+- Stattdessen werden einige Attribute über Glyphen-Eigenschaften mittels Farbe, Form und Größe codiert
+
+
+>> Aufbau des Diagramms <<
+
+- Die X-Achse zeigt die verschiedenen Manufacturer
+- Jeder Hersteller erhält eine eigene Position auf der X-Achse
+- Eine horizontale Scrollbar erweitert die Ansicht auf der X-Achse
+- Die Y-Achse zeigt eine der auswählbaren numerischen Kennzahlen
+- Y-Achsen-Werte sind:
+  - MPG
+  - DISPLACEMENT
+  - HORSEPOWER
+  - ACCELERATION
+- Der Maximalwert der Y-Skala soll nicht exakt dem höchsten Datenwert entsprechen
+- Oberhalb des Maximums wird zusätzlicher Abstand eingeplant, damit Glyphen am oberen Rand nicht abgeschnitten werden
+
+- Fehlende Werte (NA) werden separat behandelt und gesondert angezeigt
+- Für fehlende Werte wird unterhalb der eigentlichen Y-Achse ein eigener Bereich vorgesehen. Dieser Bereich geht ins negative und liegt bei -1 / NA
+- Es gibt einen Checkbox-Filter zum ausblenden von Autos mit fehlenden Werten
+
+- Innerhalb eines Herstellers können mehrere Autos denselben oder sehr ähnliche Y-Werte besitzen und dadurch mit anderen Glyphen übereinander liegen
+- Punkte mit gleichem oder sehr nahem Y-Wert werden horizontal nebeneinander angeordnet
+- Die X-Position eines Herstellers wird dafür innerhalb einer kleinen Breite erweitert
+- Dadurch entsteht pro Hersteller eine Art lokaler Streifen oder Cluster (Beeswarm-Ansatz)
+
+
+>> Glyphen <<
+
+- Jedes Auto wird als Glyphe mit mehreren visuellen Eigenschaften dargestellt
+- Die Form der Glyphe codiert die Anzahl der Zylinder
+  - 3 Zylinder: Kreis
+  - 4 Zylinder: Stern
+  - 5 Zylinder: Rechteck
+  - 6 Zylinder: Pentagon
+  - 8 Zylinder: Dreieck
+- Die Farbe der Glyphe codiert die Herkunft Origin
+  - Europa: Blau
+  - USA: Rot
+  - Japan: Gelb
+- Schwerere Autos werden durch größere Glyphen dargestellt
+- Die Position im Diagramm spiegelt den Hersteller und den ausgewählten Y-Wert wider
+
+
+>> Interaktivität <<
+
+- Der Wert der Y-Achse ist über eine Select-Box auswählbar
+- Beim Hovern über eine Glyphe wird eine Detailbox angezeigt
+- Diese Detailbox enthält alle relevanten Informationen zum ausgewählten Auto aus dem Datensatz
+- Die Detailbox hebt den aktuell auf der Y-Achse dargestellten Wert hervor
