@@ -131,7 +131,8 @@
       persistent
     >
       <v-sheet v-if="hoveredCar" class="details-menu" elevation="8">
-        <div>
+        <div class="details-heading">
+          <v-icon class="details-icon" icon="mdi-car-side" size="18" />
           <p class="text-subtitle-1 font-weight-bold">
             {{ titleCase(hoveredCar.manufacturer) }} {{ hoveredCar.car }}
           </p>
@@ -445,14 +446,16 @@ function formatTick(value: number) {
 <style scoped>
 .chart-shell {
   background: #ffffff;
-  border: 1px solid #d7dde8;
+  border: 1px solid #dce3ed;
   border-radius: 8px;
+  box-shadow: 0 12px 30px rgba(50, 65, 90, 0.08);
   overflow: hidden;
 }
 
 .chart-scroll {
   overflow-x: auto;
   overflow-y: hidden;
+  scrollbar-color: #b9c4d4 #eef2f7;
 }
 
 .chart-svg {
@@ -461,22 +464,22 @@ function formatTick(value: number) {
 }
 
 .chart-background {
-  fill: #fbfcff;
+  fill: #ffffff;
 }
 
 .grid-lines line {
-  stroke: #e5e9f2;
+  stroke: #edf0f5;
   stroke-width: 1;
 }
 
 .manufacturer-guides line {
-  stroke: #d8dee9;
+  stroke: #dce3ed;
   stroke-dasharray: 3 5;
   stroke-width: 1;
 }
 
 .axes line {
-  stroke: #293241;
+  stroke: #344054;
   stroke-linecap: round;
   stroke-width: 1.6;
 }
@@ -506,7 +509,7 @@ function formatTick(value: number) {
 }
 
 .x-axis-labels line {
-  stroke: #293241;
+  stroke: #64748b;
   stroke-width: 1.3;
 }
 
@@ -520,7 +523,7 @@ function formatTick(value: number) {
 }
 
 .glyph {
-  stroke: #182230;
+  stroke: #1f2937;
   stroke-linejoin: round;
   stroke-width: 1.6;
   transition:
@@ -532,12 +535,15 @@ function formatTick(value: number) {
 .glyph-hit-area:hover .glyph,
 .glyph-hit-area:focus-visible .glyph,
 .glyph-hit-area.active .glyph {
-  filter: drop-shadow(0 8px 12px rgba(24, 34, 48, 0.2));
+  filter: drop-shadow(0 7px 10px rgba(24, 34, 48, 0.22));
   stroke-width: 2.8;
-  transform: scale(1.08);
+  transform: scale(1.1);
 }
 
 .details-menu {
+  background: #ffffff;
+  border: 1px solid #dce3ed;
+  border-radius: 8px;
   display: grid;
   gap: 16px;
   max-width: 340px;
@@ -545,8 +551,25 @@ function formatTick(value: number) {
   width: max-content;
 }
 
+.details-heading {
+  display: grid;
+  gap: 2px 8px;
+  grid-template-columns: auto 1fr;
+}
+
+.details-heading p {
+  grid-column: 2;
+  margin: 0;
+}
+
+.details-icon {
+  color: #475569;
+  grid-row: 1 / span 2;
+  margin-top: 3px;
+}
+
 .detail-subtitle {
-  margin: 2px 0 0;
+  margin: 0;
 }
 
 dl {
@@ -564,8 +587,8 @@ dl div {
 }
 
 dl div.highlighted {
-  background: #fff7d6;
-  border-color: #eab308;
+  background: #fff9df;
+  border-color: #d8aa17;
 }
 
 dd {

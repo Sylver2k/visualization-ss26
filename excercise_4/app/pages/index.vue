@@ -1,33 +1,14 @@
 <template>
   <main class="cars-page">
-    <section class="toolbar">
-      <div>
+    <section class="page-header">
+      <div class="title-block">
+        <p class="page-kicker text-caption text-medium-emphasis">
+          Automotive dataset
+        </p>
         <h1>Car Dataset Visualization</h1>
-      </div>
-
-      <div class="controls">
-        <v-select
-          v-model="selectedMetricKey"
-          density="comfortable"
-          hide-details
-          item-title="label"
-          item-value="key"
-          :items="metricConfigs"
-          label="Y axis"
-          min-width="260"
-          variant="outlined"
-        />
-        <manufacturer-filter
-          v-model="selectedManufacturers"
-          :options="manufacturerOptions"
-        />
-        <v-checkbox
-          v-model="hideMissing"
-          color="primary"
-          density="comfortable"
-          hide-details
-          label="Hide missing values"
-        />
+        <p class="page-subtitle text-body-2 text-medium-emphasis">
+          Model years 1970-1982
+        </p>
       </div>
     </section>
 
@@ -35,80 +16,120 @@
       The car dataset could not be loaded.
     </v-alert>
 
-    <section v-else class="workspace">
-      <div class="chart-column">
+    <section v-else class="visualization-area">
+      <div class="chart-toolbar">
         <div
           class="chart-meta text-body-2 font-weight-bold text-medium-emphasis"
         >
-          <span>{{ filteredCars.length }} cars</span>
-          <span>{{ manufacturerCount }} manufacturers</span>
-          <span>{{ selectedMetric.sourceLabel }} on Y axis</span>
+          <span>
+            <v-icon icon="mdi-car-side" size="16" />
+            {{ filteredCars.length }} cars
+          </span>
+          <span>
+            <v-icon icon="mdi-domain" size="16" />
+            {{ manufacturerCount }} manufacturers
+          </span>
+          <span>
+            <v-icon icon="mdi-chart-line" size="16" />
+            {{ selectedMetric.sourceLabel }} on Y axis
+          </span>
         </div>
 
-        <car-glyph-chart
-          v-if="cars"
-          :cars="filteredCars"
-          :hide-missing="hideMissing"
-          :metric="selectedMetric"
-        />
+        <div class="controls-panel">
+          <v-select
+            v-model="selectedMetricKey"
+            class="metric-select"
+            density="comfortable"
+            hide-details
+            item-title="label"
+            item-value="key"
+            :items="metricConfigs"
+            label="Y axis"
+            min-width="260"
+            variant="outlined"
+          />
+          <manufacturer-filter
+            v-model="selectedManufacturers"
+            :options="manufacturerOptions"
+          />
+          <v-checkbox
+            v-model="hideMissing"
+            class="missing-checkbox"
+            color="primary"
+            density="comfortable"
+            hide-details
+            label="Hide missing values"
+          />
+        </div>
       </div>
 
-      <aside class="side-panel">
-        <section class="panel-block">
-          <h2>Legend</h2>
+      <div class="workspace">
+        <div class="chart-column">
+          <car-glyph-chart
+            v-if="cars"
+            :cars="filteredCars"
+            :hide-missing="hideMissing"
+            :metric="selectedMetric"
+          />
+        </div>
 
-          <div class="legend-section">
-            <h3>Origin color</h3>
-            <div
-              v-for="origin in originLegend"
-              :key="origin.label"
-              class="legend-row"
-            >
-              <span
-                class="color-swatch"
-                :style="{ backgroundColor: origin.color }"
-              />
-              <span>{{ origin.label }}</span>
-            </div>
-          </div>
+        <aside class="side-panel">
+          <section class="panel-block">
+            <h2>Legend</h2>
 
-          <div class="legend-section">
-            <h3>Cylinder shape</h3>
-            <div
-              v-for="shape in cylinderLegend"
-              :key="shape.label"
-              class="legend-row"
-            >
-              <svg
-                height="28"
-                viewBox="-16 -16 32 32"
-                width="28"
-                aria-hidden="true"
+            <div class="legend-section">
+              <h3>Origin color</h3>
+              <div
+                v-for="origin in originLegend"
+                :key="origin.label"
+                class="legend-row"
               >
-                <path
-                  :d="shape.path"
-                  fill="#eef2ff"
-                  stroke="#182230"
-                  stroke-width="1.8"
+                <span
+                  class="color-swatch"
+                  :style="{ backgroundColor: origin.color }"
                 />
-              </svg>
-              <span>{{ shape.label }}</span>
+                <span>{{ origin.label }}</span>
+              </div>
             </div>
-          </div>
 
-          <div class="legend-section">
-            <h3>Weight size</h3>
-            <div class="weight-demo">
-              <span class="weight-dot small" />
-              <span class="weight-dot medium" />
-              <span class="weight-dot large" />
+            <div class="legend-section">
+              <h3>Cylinder shape</h3>
+              <div
+                v-for="shape in cylinderLegend"
+                :key="shape.label"
+                class="legend-row"
+              >
+                <svg
+                  height="28"
+                  viewBox="-16 -16 32 32"
+                  width="28"
+                  aria-hidden="true"
+                >
+                  <path
+                    :d="shape.path"
+                    fill="#eef2ff"
+                    stroke="#182230"
+                    stroke-width="1.8"
+                  />
+                </svg>
+                <span>{{ shape.label }}</span>
+              </div>
             </div>
-            <p class="text-body-2 text-medium-emphasis">
-              Heavier cars use larger glyphs.
-            </p>
-          </div>
-        </section>
-      </aside>
+
+            <div class="legend-section">
+              <h3>Weight size</h3>
+              <div class="weight-demo">
+                <span class="weight-dot small" />
+                <span class="weight-dot medium" />
+                <span class="weight-dot large" />
+              </div>
+              <p class="text-body-2 text-medium-emphasis">
+                Heavier cars use larger glyphs.
+              </p>
+            </div>
+          </section>
+        </aside>
+      </div>
     </section>
   </main>
 </template>
@@ -157,39 +178,74 @@ const cylinderLegend = [
 
 <style scoped>
 .cars-page {
-  background: #f4f7fb;
+  background: #f3f6fa;
   min-height: 100vh;
-  padding: 28px;
+  padding: 32px;
 }
 
-.toolbar {
-  align-items: end;
-  display: flex;
-  gap: 24px;
-  justify-content: space-between;
-  margin: 0 auto 20px;
+.page-header {
+  margin: 0 auto;
   max-width: 1480px;
 }
 
+.title-block {
+  min-width: 280px;
+}
+
+.page-kicker {
+  letter-spacing: 0.08em;
+  margin: 0 0 6px;
+  text-transform: uppercase;
+}
+
 h1 {
+  color: #172033;
   line-height: 1;
   margin: 0;
 }
 
-.controls {
+.page-subtitle {
+  margin: 8px 0 0;
+}
+
+.controls-panel {
   align-items: center;
+  background: #ffffff;
+  border: 1px solid #dce3ed;
+  border-radius: 8px;
+  box-shadow: 0 8px 22px rgba(50, 65, 90, 0.06);
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 12px;
   justify-content: flex-end;
+  padding: 10px 12px;
+}
+
+.metric-select {
+  min-width: 240px;
+}
+
+.missing-checkbox {
+  margin-inline-start: 2px;
+}
+
+.visualization-area {
+  margin: 0 auto;
+  max-width: 1480px;
+}
+
+.chart-toolbar {
+  align-items: flex-end;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  margin-bottom: 14px;
 }
 
 .workspace {
   display: grid;
   gap: 18px;
   grid-template-columns: minmax(0, 1fr) 320px;
-  margin: 0 auto;
-  max-width: 1480px;
 }
 
 .chart-column {
@@ -199,22 +255,25 @@ h1 {
 .chart-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 8px;
 }
 
 .chart-meta span {
+  align-items: center;
   background: #ffffff;
-  border: 1px solid #d7dde8;
+  border: 1px solid #dce3ed;
   border-radius: 999px;
-  padding: 6px 10px;
+  display: inline-flex;
+  gap: 6px;
+  padding: 6px 11px;
 }
 
 .panel-block {
   background: #ffffff;
-  border: 1px solid #d7dde8;
+  border: 1px solid #dce3ed;
   border-radius: 8px;
-  padding: 18px;
+  box-shadow: 0 8px 22px rgba(50, 65, 90, 0.06);
+  padding: 20px;
 }
 
 h2 {
@@ -226,7 +285,9 @@ h3 {
 }
 
 .legend-section + .legend-section {
+  border-top: 1px solid #eef1f5;
   margin-top: 18px;
+  padding-top: 18px;
 }
 
 .legend-row {
@@ -237,10 +298,11 @@ h3 {
 }
 
 .color-swatch {
-  border: 1px solid #182230;
+  border: 1px solid rgba(23, 32, 51, 0.72);
   border-radius: 50%;
   display: inline-block;
   height: 18px;
+  box-shadow: 0 2px 4px rgba(50, 65, 90, 0.12);
   width: 18px;
 }
 
@@ -253,7 +315,7 @@ h3 {
 
 .weight-dot {
   background: #dbeafe;
-  border: 1.6px solid #182230;
+  border: 1.6px solid #334155;
   border-radius: 50%;
   display: inline-block;
 }

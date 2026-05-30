@@ -9,16 +9,21 @@
       <v-btn
         v-bind="activatorProps"
         :append-icon="menuOpen ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+        class="manufacturer-filter-activator"
         height="48"
+        prepend-icon="mdi-domain"
         variant="outlined"
       >
         Manufacturer
       </v-btn>
     </template>
 
-    <v-card class="manufacturer-filter-menu">
+    <v-card
+      class="manufacturer-filter-menu"
+      elevation="8"
+    >
       <div class="d-flex align-center justify-space-between pa-4">
-        <span class="text-subtitle-1">Manufacturer</span>
+        <span class="text-subtitle-1 font-weight-bold">Manufacturer</span>
         <span class="text-caption text-medium-emphasis">
           {{ modelValue.length }}/{{ options.length }}
         </span>
@@ -104,7 +109,14 @@ function clearSelection() {
 
 <style scoped>
 .manufacturer-filter-menu {
+  border: 1px solid #dce3ed;
+  border-radius: 8px;
   width: 280px;
+}
+
+.manufacturer-filter-activator {
+  min-width: 180px;
+  text-transform: none;
 }
 
 .manufacturer-filter-list {
