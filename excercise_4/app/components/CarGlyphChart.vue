@@ -169,7 +169,7 @@ const margin = {
 const manufacturerStep = 96;
 const chartHeight = 620;
 const baselineY = 442;
-const naBandY = 516;
+const naBandY = 536;
 const plotHeight = baselineY - margin.top;
 
 const manufacturers = computed(() =>
