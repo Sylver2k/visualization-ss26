@@ -71,13 +71,6 @@
           >
             NA
           </text>
-          <line
-            class="na-divider"
-            :x1="margin.left"
-            :x2="chartWidth - margin.right"
-            :y1="naBandY - 30"
-            :y2="naBandY - 30"
-          />
         </g>
 
         <g class="x-axis-labels text-caption text-medium-emphasis">
@@ -119,11 +112,12 @@
     </div>
 
     <v-menu
-      :model-value="!!hoveredCar"
+      v-model="showDetailsMenu"
       :target="detailsMenuTarget"
       location="end"
       offset="12"
       :close-on-content-click="false"
+      persistent
     >
       <v-sheet v-if="hoveredCar" class="details-menu" elevation="8">
         <div>
@@ -164,6 +158,7 @@ const props = defineProps<{
 const { polygonPath, starPath, rectanglePath } = useDefaults();
 const hoveredCar = ref<CarRecord | null>(null);
 const detailsMenuTarget = ref<[number, number]>([0, 0]);
+const showDetailsMenu = ref(false);
 
 const margin = {
   top: 52,
@@ -294,6 +289,10 @@ const detailRows = computed(() => {
       highlighted: props.metric.key === "acceleration",
     },
   ];
+});
+
+watch(hoveredCar, (newValue, oldValue) => {
+  showDetailsMenu.value = !!newValue && newValue.id !== oldValue?.id;
 });
 
 function metricValue(car: CarRecord) {
