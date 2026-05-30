@@ -17,6 +17,10 @@
           min-width="260"
           variant="outlined"
         />
+        <manufacturer-filter
+          v-model="selectedManufacturers"
+          :options="manufacturerOptions"
+        />
         <v-checkbox
           v-model="hideMissing"
           color="primary"
@@ -36,14 +40,14 @@
         <div
           class="chart-meta text-body-2 font-weight-bold text-medium-emphasis"
         >
-          <span>{{ cars?.length ?? 0 }} cars</span>
+          <span>{{ filteredCars.length }} cars</span>
           <span>{{ manufacturerCount }} manufacturers</span>
           <span>{{ selectedMetric.sourceLabel }} on Y axis</span>
         </div>
 
         <car-glyph-chart
           v-if="cars"
-          :cars="cars"
+          :cars="filteredCars"
           :hide-missing="hideMissing"
           :metric="selectedMetric"
         />
@@ -111,6 +115,7 @@
 
 <script setup lang="ts">
 const selectedMetricKey = ref<MetricKey>("fuelConsumptionL100km");
+const selectedManufacturers = ref<string[]>([]);
 const hideMissing = ref(false);
 
 const { data: cars, error } = await useCars();
@@ -120,11 +125,19 @@ const selectedMetric = computed(() =>
   metricConfigByKey(selectedMetricKey.value),
 );
 
+const manufacturerOptions = computed(() =>
+  [...new Set((cars.value ?? []).map((car) => car.manufacturer))].sort((a, b) =>
+    a.localeCompare(b),
+  ),
+);
+
+const filteredCars = computed(() => {
+  const selected = new Set(selectedManufacturers.value);
+  return (cars.value ?? []).filter((car) => selected.has(car.manufacturer));
+});
+
 const manufacturerCount = computed(() => {
-  if (!cars.value) {
-    return 0;
-  }
-  return new Set(cars.value.map((car) => car.manufacturer)).size;
+  return new Set(filteredCars.value.map((car) => car.manufacturer)).size;
 });
 
 const originLegend = [

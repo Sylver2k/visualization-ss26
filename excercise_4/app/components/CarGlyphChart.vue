@@ -335,6 +335,18 @@ watch(hoveredCar, (newValue, oldValue) => {
   showDetailsMenu.value = !!newValue && newValue.id !== oldValue?.id;
 });
 
+watch(
+  () => props.cars,
+  (cars) => {
+    if (
+      hoveredCar.value &&
+      !cars.some((car) => car.id === hoveredCar.value?.id)
+    ) {
+      hoveredCar.value = null;
+    }
+  },
+);
+
 function metricValue(car: CarRecord) {
   return car[props.metric.key];
 }
