@@ -8,7 +8,7 @@
         :width="chartWidth"
         role="img"
         :aria-label="`Car glyph chart by manufacturer and ${metric.label}`"
-        @mouseleave="emit('hover', null)"
+        @mouseleave="hoveredCar = null"
       >
         <rect
           :height="chartHeight"
@@ -41,11 +41,15 @@
             :y1="margin.top"
             :y2="naBandY + 28"
           />
-          <text class="axis-title" :x="margin.left" y="24">
+          <text
+            class="axis-title text-body-2 font-weight-bold"
+            :x="margin.left"
+            y="24"
+          >
             {{ metric.label }} ({{ metric.unit }})
           </text>
           <text
-            class="axis-title x-title"
+            class="axis-title x-title text-body-2 font-weight-bold"
             :x="chartWidth - margin.right"
             :y="chartHeight - 12"
           >
@@ -54,13 +58,17 @@
           <text
             v-for="tick in yTicks"
             :key="`label-${tick}`"
-            class="tick-label"
+            class="tick-label text-caption text-medium-emphasis"
             :x="margin.left - 12"
             :y="yScale(tick) + 4"
           >
             {{ formatTick(tick) }}
           </text>
-          <text class="tick-label" :x="margin.left - 12" :y="naBandY + 4">
+          <text
+            class="tick-label text-caption text-medium-emphasis"
+            :x="margin.left - 12"
+            :y="naBandY + 4"
+          >
             NA
           </text>
           <line
@@ -70,12 +78,9 @@
             :y1="naBandY - 30"
             :y2="naBandY - 30"
           />
-          <text class="na-label" :x="margin.left + 12" :y="naBandY - 38">
-            Missing selected values
-          </text>
         </g>
 
-        <g class="x-axis-labels">
+        <g class="x-axis-labels text-caption text-medium-emphasis">
           <g
             v-for="manufacturer in manufacturers"
             :key="manufacturer"
@@ -93,14 +98,14 @@
             v-for="point in positionedCars"
             :key="point.car.id"
             class="glyph-hit-area"
-            :class="{ active: activeCar?.id === point.car.id }"
+            :class="{ active: hoveredCar?.id === point.car.id }"
             :transform="`translate(${point.x}, ${point.y})`"
             tabindex="0"
-            role="button"
+            role="img"
             :aria-label="`${point.car.manufacturer} ${point.car.car}`"
-            @click="emit('select', point.car)"
-            @focus="emit('hover', point.car)"
-            @mouseenter="emit('hover', point.car)"
+            @blur="hoveredCar = null"
+            @focus="emitHover(point.car, $event)"
+            @mouseenter="emitHover(point.car, $event)"
           >
             <circle class="glyph-target" :r="point.size + 8" />
             <path
@@ -112,6 +117,40 @@
         </g>
       </svg>
     </div>
+
+    <v-menu
+      :model-value="!!hoveredCar"
+      :target="detailsMenuTarget"
+      location="end"
+      offset="12"
+      :close-on-content-click="false"
+    >
+      <v-sheet v-if="hoveredCar" class="details-menu" elevation="8">
+        <div>
+          <p class="text-subtitle-1 font-weight-bold">
+            {{ titleCase(hoveredCar.manufacturer) }} {{ hoveredCar.car }}
+          </p>
+          <p class="detail-subtitle text-body-2 text-medium-emphasis">
+            Model year 19{{ hoveredCar.modelYear.toString().padStart(2, "0") }}
+          </p>
+        </div>
+
+        <dl>
+          <div
+            v-for="detail in detailRows"
+            :key="detail.label"
+            :class="{ highlighted: detail.highlighted }"
+          >
+            <dt
+              class="text-caption font-weight-bold text-uppercase text-medium-emphasis"
+            >
+              {{ detail.label }}
+            </dt>
+            <dd>{{ detail.value }}</dd>
+          </div>
+        </dl>
+      </v-sheet>
+    </v-menu>
   </div>
 </template>
 
@@ -120,15 +159,11 @@ const props = defineProps<{
   cars: CarRecord[];
   metric: MetricConfig;
   hideMissing: boolean;
-  activeCar: CarRecord | null;
 }>();
 
 const { polygonPath, starPath, rectanglePath } = useDefaults();
-
-const emit = defineEmits<{
-  hover: [car: CarRecord | null];
-  select: [car: CarRecord];
-}>();
+const hoveredCar = ref<CarRecord | null>(null);
+const detailsMenuTarget = ref<[number, number]>([0, 0]);
 
 const margin = {
   top: 52,
@@ -216,8 +251,70 @@ const positionedCars = computed(() => {
   });
 });
 
+const detailRows = computed(() => {
+  const car = hoveredCar.value;
+  if (!car) {
+    return [];
+  }
+
+  return [
+    {
+      label: "Origin",
+      value: car.origin,
+      highlighted: false,
+    },
+    {
+      label: "Cylinders",
+      value: car.cylinders.toString(),
+      highlighted: false,
+    },
+    {
+      label: "Fuel consumption",
+      value: `${props.metric.key === "fuelConsumptionL100km" ? props.metric.format(car.fuelConsumptionL100km) : formatNullable(car.fuelConsumptionL100km, 1, "l/100 km")} (${formatNullable(car.mpg, 1, "MPG")})`,
+      highlighted: props.metric.key === "fuelConsumptionL100km",
+    },
+    {
+      label: "Displacement",
+      value: `${Math.round(car.displacementCcm)} cm3 (${Math.round(car.displacement)} cubic in)`,
+      highlighted: props.metric.key === "displacementCcm",
+    },
+    {
+      label: "Horsepower",
+      value: formatNullable(car.horsepower, 0, "hp"),
+      highlighted: props.metric.key === "horsepower",
+    },
+    {
+      label: "Weight",
+      value: `${Math.round(car.weightKg)} kg (${Math.round(car.weight)} lbs)`,
+      highlighted: false,
+    },
+    {
+      label: "Acceleration",
+      value: `${car.acceleration.toFixed(1)} s`,
+      highlighted: props.metric.key === "acceleration",
+    },
+  ];
+});
+
 function metricValue(car: CarRecord) {
   return car[props.metric.key];
+}
+
+function emitHover(car: CarRecord, event: MouseEvent | FocusEvent) {
+  const bounds = (event.currentTarget as SVGGElement).getBoundingClientRect();
+  detailsMenuTarget.value = [bounds.right, bounds.top + bounds.height / 2];
+  hoveredCar.value = car;
+}
+
+function formatNullable(value: number | null, digits: number, unit: string) {
+  if (value === null) {
+    return "NA";
+  }
+  return `${value.toFixed(digits)} ${unit}`;
+}
+
+function titleCase(value: string) {
+  return value.replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
 function manufacturerX(manufacturer: string) {
@@ -321,9 +418,7 @@ function formatTick(value: number) {
 }
 
 .axis-title {
-  fill: #182230;
-  font-size: 15px;
-  font-weight: 700;
+  fill: currentColor;
 }
 
 .x-title {
@@ -333,8 +428,7 @@ function formatTick(value: number) {
 .tick-label,
 .na-label,
 .x-axis-labels text {
-  fill: #596579;
-  font-size: 12px;
+  fill: currentColor;
 }
 
 .tick-label {
@@ -371,5 +465,40 @@ function formatTick(value: number) {
   filter: drop-shadow(0 8px 12px rgba(24, 34, 48, 0.2));
   stroke-width: 2.8;
   transform: scale(1.08);
+}
+
+.details-menu {
+  display: grid;
+  gap: 16px;
+  max-width: 340px;
+  padding: 16px;
+  width: max-content;
+}
+
+.detail-subtitle {
+  margin: 2px 0 0;
+}
+
+dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+dl div {
+  border: 1px solid #e3e8f1;
+  border-radius: 8px;
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+}
+
+dl div.highlighted {
+  background: #fff7d6;
+  border-color: #eab308;
+}
+
+dd {
+  margin: 0;
 }
 </style>
