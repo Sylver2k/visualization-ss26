@@ -28,6 +28,17 @@
           />
         </g>
 
+        <g class="manufacturer-guides">
+          <line
+            v-for="boundaryX in manufacturerBoundaryPositions"
+            :key="boundaryX"
+            :x1="boundaryX"
+            :x2="boundaryX"
+            :y1="margin.top"
+            :y2="naBandY + 28"
+          />
+        </g>
+
         <g class="axes">
           <line
             :x1="margin.left"
@@ -168,6 +179,7 @@ const margin = {
 };
 const manufacturerStep = 96;
 const plotHorizontalInset = 48;
+const manufacturerBoundaryGap = 4;
 const chartHeight = 620;
 const baselineY = 442;
 const naBandY = 536;
@@ -186,6 +198,16 @@ const chartWidth = computed(
     plotHorizontalInset * 2 +
     manufacturers.value.length * manufacturerStep,
 );
+
+const manufacturerBoundaryPositions = computed(() => [
+  margin.left,
+  ...Array.from(
+    { length: Math.max(manufacturers.value.length - 1, 0) },
+    (_, index) =>
+      margin.left + plotHorizontalInset + manufacturerStep * (index + 1),
+  ),
+  chartWidth.value - margin.right,
+]);
 
 const visibleCars = computed(() =>
   props.hideMissing
@@ -241,10 +263,23 @@ const positionedCars = computed(() => {
 
   return visibleCars.value.map((car) => {
     const value = metricValue(car);
+    const size = weightSize(car.weightKg);
+    const manufacturerIndex = manufacturers.value.indexOf(car.manufacturer);
+    const leftBoundary = manufacturerBoundaryPositions.value[manufacturerIndex];
+    const rightBoundary =
+      manufacturerBoundaryPositions.value[manufacturerIndex + 1];
+    const boundaryRadius = glyphBoundaryRadius(car.cylinders, size);
+    const desiredX =
+      manufacturerX(car.manufacturer) + (offsets.get(car.id) ?? 0);
+
     return {
       car,
-      size: weightSize(car.weightKg),
-      x: manufacturerX(car.manufacturer) + (offsets.get(car.id) ?? 0),
+      size,
+      x: clamp(
+        desiredX,
+        leftBoundary + boundaryRadius + manufacturerBoundaryGap,
+        rightBoundary - boundaryRadius - manufacturerBoundaryGap,
+      ),
       y: value === null ? naBandY : yScale(value),
     };
   });
@@ -330,6 +365,14 @@ function manufacturerX(manufacturer: string) {
   );
 }
 
+function glyphBoundaryRadius(cylinders: number, size: number) {
+  return cylinders === 8 ? size * 1.08 : size;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
 function yScale(value: number) {
   return baselineY - (value / yMax.value) * plotHeight;
 }
@@ -410,6 +453,12 @@ function formatTick(value: number) {
 
 .grid-lines line {
   stroke: #e5e9f2;
+  stroke-width: 1;
+}
+
+.manufacturer-guides line {
+  stroke: #d8dee9;
+  stroke-dasharray: 3 5;
   stroke-width: 1;
 }
 
