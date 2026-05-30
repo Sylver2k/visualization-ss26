@@ -167,6 +167,7 @@ const margin = {
   left: 82,
 };
 const manufacturerStep = 96;
+const plotHorizontalInset = 48;
 const chartHeight = 620;
 const baselineY = 442;
 const naBandY = 536;
@@ -180,7 +181,10 @@ const manufacturers = computed(() =>
 
 const chartWidth = computed(
   () =>
-    margin.left + margin.right + manufacturers.value.length * manufacturerStep,
+    margin.left +
+    margin.right +
+    plotHorizontalInset * 2 +
+    manufacturers.value.length * manufacturerStep,
 );
 
 const visibleCars = computed(() =>
@@ -318,7 +322,12 @@ function titleCase(value: string) {
 
 function manufacturerX(manufacturer: string) {
   const index = manufacturers.value.indexOf(manufacturer);
-  return margin.left + manufacturerStep * index + manufacturerStep / 2;
+  return (
+    margin.left +
+    plotHorizontalInset +
+    manufacturerStep * index +
+    manufacturerStep / 2
+  );
 }
 
 function yScale(value: number) {
