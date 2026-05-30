@@ -177,9 +177,10 @@ const margin = {
   bottom: 120,
   left: 82,
 };
-const manufacturerStep = 96;
+const manufacturerStep = 128;
 const plotHorizontalInset = 48;
 const manufacturerBoundaryGap = 4;
+const beeswarmStep = 25;
 const chartHeight = 620;
 const baselineY = 442;
 const naBandY = 536;
@@ -257,7 +258,7 @@ const positionedCars = computed(() => {
     const sorted = [...group].sort((a, b) => a.car.localeCompare(b.car));
     sorted.forEach((car, index) => {
       const centered = index - (sorted.length - 1) / 2;
-      offsets.set(car.id, centered * 13);
+      offsets.set(car.id, centered * beeswarmStep);
     });
   }
 
