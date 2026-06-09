@@ -1,14 +1,13 @@
 {
   "folders": [
     {
-      "name": "Excercise 1️⃣",
-      "path": "excercise_1",
+      "name": "Excercise 4️⃣",
+      "path": "excercise_4",
     },
     {
-      "name": "Excercise 2️⃣",
-      "path": "excercise_2",
+      "name": "Excercise 5️⃣",
+      "path": "excercise_5",
     },
-
   ],
   "settings": {
     "editor.formatOnSave": true,
