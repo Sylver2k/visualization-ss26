@@ -15,7 +15,7 @@
         class="diagram"
         role="img"
         :aria-label="`${yAttribute} by ${xAttribute} scatterplot`"
-      />
+      ></svg>
     </v-card-text>
   </v-card>
 </template>
@@ -30,7 +30,6 @@ import {
   schemeTableau10,
   select,
 } from "d3";
-import type { ParsedDataset } from "../composables/types";
 
 const props = withDefaults(
   defineProps<{
