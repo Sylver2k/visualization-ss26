@@ -1,21 +1,52 @@
 <template>
   <v-card variant="outlined">
     <v-card-item>
-      <v-card-title>Vehicle scatterplot</v-card-title>
+      <v-card-title>Dataset scatterplot</v-card-title>
       <v-card-subtitle>
-        {{ xAttribute }} and {{ yAttribute }}, colored by {{ colorAttribute }}
+        {{ dataset.fileName }}
       </v-card-subtitle>
     </v-card-item>
 
     <v-divider />
 
-    <v-card-text class="pa-2 pa-sm-4 overflow-x-auto">
-      <svg
-        ref="chartElement"
-        class="diagram"
-        role="img"
-        :aria-label="`${yAttribute} by ${xAttribute} scatterplot`"
-      ></svg>
+    <v-card-text class="pa-4">
+      <visualization-controls
+        v-model:x-attribute="selectedXAttribute"
+        v-model:y-attribute="selectedYAttribute"
+        v-model:color-attribute="selectedColorAttribute"
+        v-model:shape-attribute="selectedShapeAttribute"
+        :columns="dataset.columns"
+        :rows="dataset.rows"
+      />
+
+      <div class="overflow-x-auto">
+        <svg
+          ref="chartElement"
+          class="diagram"
+          role="img"
+          :aria-label="`${selectedYAttribute} by ${selectedXAttribute} scatterplot`"
+        ></svg>
+      </div>
+
+      <v-divider class="my-4" />
+
+      <v-row>
+        <v-col cols="12" md="6">
+          <color-legend
+            :attribute="selectedColorAttribute"
+            :column-type="selectedColorColumn?.type"
+            :rows="plottedRows"
+            :missing-value-color="missingValueColor"
+          />
+        </v-col>
+
+        <v-col cols="12" md="6">
+          <shape-legend
+            :attribute="selectedShapeAttribute"
+            :rows="plottedRows"
+          />
+        </v-col>
+      </v-row>
     </v-card-text>
   </v-card>
 </template>
@@ -25,28 +56,35 @@ import {
   axisBottom,
   axisLeft,
   extent,
+  interpolateViridis,
   scaleLinear,
   scaleOrdinal,
+  scaleSequential,
   schemeTableau10,
   select,
+  symbol,
 } from "d3";
+import { getColorAttributes } from "../utils/chartColors";
+import {
+  chartSymbolTypes,
+  getShapeAttributes,
+} from "../utils/chartSymbols";
 
-const props = withDefaults(
-  defineProps<{
-    dataset: ParsedDataset;
-    xAttribute?: string;
-    yAttribute?: string;
-    colorAttribute?: string;
-  }>(),
-  {
-    xAttribute: "Gewicht",
-    yAttribute: "Verbrauch",
-    colorAttribute: "Herkunft",
-  },
-);
+const props = defineProps<{
+  dataset: ParsedDataset;
+  xAttribute?: string;
+  yAttribute?: string;
+  colorAttribute?: string;
+  shapeAttribute?: string;
+}>();
 
 const chartElement = ref<SVGSVGElement | null>(null);
+const selectedXAttribute = ref("");
+const selectedYAttribute = ref("");
+const selectedColorAttribute = ref("");
+const selectedShapeAttribute = ref("");
 
+const missingValueColor = "#b0bec5";
 const width = 960;
 const height = 560;
 const margin = {
@@ -56,29 +94,107 @@ const margin = {
   left: 72,
 };
 
-onMounted(drawChart);
+const plottedRows = computed(() => {
+  const xAttribute = selectedXAttribute.value;
+  const yAttribute = selectedYAttribute.value;
+
+  return props.dataset.rows.filter(
+    (row) =>
+      typeof row[xAttribute] === "number" &&
+      typeof row[yAttribute] === "number",
+  );
+});
+
+const selectedColorColumn = computed(() =>
+  props.dataset.columns.find(
+    (column) => column.name === selectedColorAttribute.value,
+  ),
+);
+
+onMounted(() => {
+  initializeSelections();
+  drawChart();
+});
 
 watch(
-  () => [
-    props.dataset,
-    props.xAttribute,
-    props.yAttribute,
-    props.colorAttribute,
-  ],
-  drawChart,
+  () => props.dataset,
+  () => {
+    initializeSelections();
+    nextTick(drawChart);
+  },
   { deep: true },
 );
 
+watch(
+  [
+    selectedXAttribute,
+    selectedYAttribute,
+    selectedColorAttribute,
+    selectedShapeAttribute,
+  ],
+  drawChart,
+);
+
+function initializeSelections() {
+  const numericNames = props.dataset.columns
+    .filter((column) => column.type === "number")
+    .map((column) => column.name);
+  const colorNames = getColorAttributes(
+    props.dataset.columns,
+    props.dataset.rows,
+  ).map((column) => column.name);
+  const shapeNames = getShapeAttributes(
+    props.dataset.columns,
+    props.dataset.rows,
+  ).map((column) => column.name);
+
+  selectedXAttribute.value = chooseAttribute(
+    props.xAttribute,
+    numericNames,
+    numericNames[0] ?? "",
+  );
+  selectedYAttribute.value = chooseAttribute(
+    props.yAttribute,
+    numericNames,
+    numericNames[1] ?? numericNames[0] ?? "",
+  );
+  selectedColorAttribute.value = chooseAttribute(
+    props.colorAttribute,
+    colorNames,
+    colorNames[0] ?? "",
+  );
+  selectedShapeAttribute.value = chooseAttribute(
+    props.shapeAttribute,
+    shapeNames,
+    shapeNames[0] ?? "",
+  );
+}
+
+function chooseAttribute(
+  requestedAttribute: string | undefined,
+  availableAttributes: string[],
+  fallback: string,
+) {
+  return requestedAttribute && availableAttributes.includes(requestedAttribute)
+    ? requestedAttribute
+    : fallback;
+}
+
 function drawChart() {
-  if (!chartElement.value) {
+  if (
+    !chartElement.value ||
+    !selectedXAttribute.value ||
+    !selectedYAttribute.value
+  ) {
     return;
   }
 
-  const points = props.dataset.rows.filter(
-    (row) =>
-      typeof row[props.xAttribute] === "number" &&
-      typeof row[props.yAttribute] === "number",
-  );
+  const xAttribute = selectedXAttribute.value;
+  const yAttribute = selectedYAttribute.value;
+  const colorAttribute = selectedColorAttribute.value;
+  const shapeAttribute = selectedShapeAttribute.value;
+
+  const points = plottedRows.value;
 
   const svg = select(chartElement.value);
   svg.selectAll("*").remove();
@@ -95,11 +211,11 @@ function drawChart() {
     return;
   }
 
-  const xDomain = extent(points, (row) => row[props.xAttribute] as number) as [
+  const xDomain = extent(points, (row) => row[xAttribute] as number) as [
     number,
     number,
   ];
-  const yDomain = extent(points, (row) => row[props.yAttribute] as number) as [
+  const yDomain = extent(points, (row) => row[yAttribute] as number) as [
     number,
     number,
   ];
@@ -114,7 +230,10 @@ function drawChart() {
     .nice()
     .range([height - margin.bottom, margin.top]);
 
-  const colorScale = scaleOrdinal<string, string>(schemeTableau10);
+  const colorFor = createColorAccessor(points, colorAttribute);
+  const shapeScale = scaleOrdinal<string, (typeof chartSymbolTypes)[number]>()
+    .domain(points.map((row) => String(row[shapeAttribute] ?? "NA")))
+    .range(chartSymbolTypes);
 
   svg
     .append("g")
@@ -132,7 +251,7 @@ function drawChart() {
     .attr("y", height - 16)
     .attr("text-anchor", "middle")
     .attr("fill", "currentColor")
-    .text(props.xAttribute);
+    .text(xAttribute);
 
   svg
     .append("text")
@@ -141,22 +260,27 @@ function drawChart() {
     .attr("y", 20)
     .attr("text-anchor", "middle")
     .attr("fill", "currentColor")
-    .text(props.yAttribute);
+    .text(yAttribute);
 
   const glyphs = svg
     .append("g")
-    .selectAll("circle")
+    .selectAll("path")
     .data(points)
-    .join("circle")
-    .attr("cx", (row) => xScale(row[props.xAttribute] as number))
-    .attr("cy", (row) => yScale(row[props.yAttribute] as number))
-    .attr("r", 5)
-    .attr("fill", (row) =>
-      colorScale(String(row[props.colorAttribute] ?? "NA")),
+    .join("path")
+    .attr(
+      "transform",
+      (row) =>
+        `translate(${xScale(row[xAttribute] as number)}, ${yScale(row[yAttribute] as number)})`,
     )
-    .attr("fill-opacity", 0.72)
+    .attr("d", (row) =>
+      symbol()
+        .type(shapeScale(String(row[shapeAttribute] ?? "NA")))
+        .size(90)(),
+    )
+    .attr("fill", colorFor)
+    .attr("fill-opacity", 0.76)
     .attr("stroke", "#263238")
-    .attr("stroke-width", 0.7);
+    .attr("stroke-width", 0.8);
 
   glyphs
     .append("title")
@@ -165,6 +289,35 @@ function drawChart() {
         .map((column) => `${column.name}: ${row[column.name] ?? "NA"}`)
         .join("\n"),
     );
+}
+
+function createColorAccessor(
+  points: DatasetRow[],
+  attribute: string,
+): (row: DatasetRow) => string {
+  const column = props.dataset.columns.find(
+    (datasetColumn) => datasetColumn.name === attribute,
+  );
+
+  if (column?.type === "number") {
+    const colorDomain = extent(
+      points,
+      (row) => row[attribute] as number | null,
+    ).filter((value): value is number => value !== undefined);
+
+    if (colorDomain.length === 2) {
+      const colorScale = scaleSequential(interpolateViridis).domain(
+        expandDomain([colorDomain[0], colorDomain[1]]),
+      );
+      return (row) =>
+        typeof row[attribute] === "number"
+          ? colorScale(row[attribute])
+          : missingValueColor;
+    }
+  }
+
+  const colorScale = scaleOrdinal<string, string>(schemeTableau10);
+  return (row) => colorScale(String(row[attribute] ?? "NA"));
 }
 
 function expandDomain([minimum, maximum]: [number, number]): [number, number] {
