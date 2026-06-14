@@ -35,7 +35,7 @@
           <color-legend
             :attribute="selectedColorAttribute"
             :column-type="selectedColorColumn?.type"
-            :rows="plottedRows"
+            :rows="dataset.rows"
             :missing-value-color="missingValueColor"
           />
         </v-col>
@@ -43,7 +43,7 @@
         <v-col cols="12" md="6">
           <shape-legend
             :attribute="selectedShapeAttribute"
-            :rows="plottedRows"
+            :rows="dataset.rows"
           />
         </v-col>
       </v-row>
@@ -65,10 +65,7 @@ import {
   symbol,
 } from "d3";
 import { getColorAttributes } from "../utils/chartColors";
-import {
-  chartSymbolTypes,
-  getShapeAttributes,
-} from "../utils/chartSymbols";
+import { chartSymbolTypes, getShapeAttributes } from "../utils/chartSymbols";
 
 const props = defineProps<{
   dataset: ParsedDataset;
@@ -87,23 +84,14 @@ const selectedShapeAttribute = ref("");
 const missingValueColor = "#b0bec5";
 const width = 960;
 const height = 560;
+const missingBandSize = 58;
+const missingBandGap = 14;
 const margin = {
   top: 24,
   right: 32,
   bottom: 64,
   left: 72,
 };
-
-const plottedRows = computed(() => {
-  const xAttribute = selectedXAttribute.value;
-  const yAttribute = selectedYAttribute.value;
-
-  return props.dataset.rows.filter(
-    (row) =>
-      typeof row[xAttribute] === "number" &&
-      typeof row[yAttribute] === "number",
-  );
-});
 
 const selectedColorColumn = computed(() =>
   props.dataset.columns.find(
@@ -194,41 +182,49 @@ function drawChart() {
   const colorAttribute = selectedColorAttribute.value;
   const shapeAttribute = selectedShapeAttribute.value;
 
-  const points = plottedRows.value;
+  const points = props.dataset.rows;
+  const numericXValues = points
+    .map((row) => row[xAttribute])
+    .filter((value): value is number => typeof value === "number");
+  const numericYValues = points
+    .map((row) => row[yAttribute])
+    .filter((value): value is number => typeof value === "number");
 
   const svg = select(chartElement.value);
   svg.selectAll("*").remove();
   svg.attr("viewBox", `0 0 ${width} ${height}`);
 
-  if (points.length === 0) {
+  if (numericXValues.length === 0 && numericYValues.length === 0) {
     svg
       .append("text")
       .attr("x", width / 2)
       .attr("y", height / 2)
       .attr("text-anchor", "middle")
       .attr("fill", "currentColor")
-      .text("No numeric values are available for these axes.");
+      .text("No numeric values are available for either axis.");
     return;
   }
 
-  const xDomain = extent(points, (row) => row[xAttribute] as number) as [
-    number,
-    number,
-  ];
-  const yDomain = extent(points, (row) => row[yAttribute] as number) as [
-    number,
-    number,
-  ];
+  const xDomain = numericDomain(numericXValues);
+  const yDomain = numericDomain(numericYValues);
+  const plotRight =
+    width - margin.right - missingBandGap - missingBandSize;
+  const plotBottom =
+    height - margin.bottom - missingBandGap - missingBandSize;
+  const missingXPosition =
+    plotRight + missingBandGap + missingBandSize / 2;
+  const missingYPosition =
+    plotBottom + missingBandGap + missingBandSize / 2;
 
   const xScale = scaleLinear()
     .domain(expandDomain(xDomain))
     .nice()
-    .range([margin.left, width - margin.right]);
+    .range([margin.left, plotRight]);
 
   const yScale = scaleLinear()
     .domain(expandDomain(yDomain))
     .nice()
-    .range([height - margin.bottom, margin.top]);
+    .range([plotBottom, margin.top]);
 
   const colorFor = createColorAccessor(points, colorAttribute);
   const shapeScale = scaleOrdinal<string, (typeof chartSymbolTypes)[number]>()
@@ -236,8 +232,38 @@ function drawChart() {
     .range(chartSymbolTypes);
 
   svg
+    .append("rect")
+    .attr("x", plotRight + missingBandGap)
+    .attr("y", margin.top)
+    .attr("width", missingBandSize)
+    .attr("height", plotBottom - margin.top)
+    .attr("fill", "#f5f7fa")
+    .attr("stroke", "#cbd5e1")
+    .attr("stroke-dasharray", "4 4");
+
+  svg
+    .append("rect")
+    .attr("x", margin.left)
+    .attr("y", plotBottom + missingBandGap)
+    .attr("width", plotRight - margin.left)
+    .attr("height", missingBandSize)
+    .attr("fill", "#f5f7fa")
+    .attr("stroke", "#cbd5e1")
+    .attr("stroke-dasharray", "4 4");
+
+  svg
+    .append("rect")
+    .attr("x", plotRight + missingBandGap)
+    .attr("y", plotBottom + missingBandGap)
+    .attr("width", missingBandSize)
+    .attr("height", missingBandSize)
+    .attr("fill", "#eceff3")
+    .attr("stroke", "#cbd5e1")
+    .attr("stroke-dasharray", "4 4");
+
+  svg
     .append("g")
-    .attr("transform", `translate(0, ${height - margin.bottom})`)
+    .attr("transform", `translate(0, ${plotBottom})`)
     .call(axisBottom(xScale));
 
   svg
@@ -247,7 +273,25 @@ function drawChart() {
 
   svg
     .append("text")
-    .attr("x", width / 2)
+    .attr("x", missingXPosition)
+    .attr("y", plotBottom + 20)
+    .attr("text-anchor", "middle")
+    .attr("fill", "currentColor")
+    .attr("font-size", 12)
+    .text("NA");
+
+  svg
+    .append("text")
+    .attr("x", margin.left - 12)
+    .attr("y", missingYPosition + 4)
+    .attr("text-anchor", "end")
+    .attr("fill", "currentColor")
+    .attr("font-size", 12)
+    .text("NA");
+
+  svg
+    .append("text")
+    .attr("x", (margin.left + plotRight) / 2)
     .attr("y", height - 16)
     .attr("text-anchor", "middle")
     .attr("fill", "currentColor")
@@ -256,7 +300,7 @@ function drawChart() {
   svg
     .append("text")
     .attr("transform", "rotate(-90)")
-    .attr("x", -height / 2)
+    .attr("x", -(margin.top + plotBottom) / 2)
     .attr("y", 20)
     .attr("text-anchor", "middle")
     .attr("fill", "currentColor")
@@ -269,8 +313,20 @@ function drawChart() {
     .join("path")
     .attr(
       "transform",
-      (row) =>
-        `translate(${xScale(row[xAttribute] as number)}, ${yScale(row[yAttribute] as number)})`,
+      (row, index) => {
+        const xValue = row[xAttribute];
+        const yValue = row[yAttribute];
+        const x =
+          typeof xValue === "number"
+            ? xScale(xValue)
+            : missingXPosition + jitter(index, 0);
+        const y =
+          typeof yValue === "number"
+            ? yScale(yValue)
+            : missingYPosition + jitter(index, 1);
+
+        return `translate(${x}, ${y})`;
+      },
     )
     .attr("d", (row) =>
       symbol()
@@ -318,6 +374,20 @@ function createColorAccessor(
 
   const colorScale = scaleOrdinal<string, string>(schemeTableau10);
   return (row) => colorScale(String(row[attribute] ?? "NA"));
+}
+
+function numericDomain(values: number[]): [number, number] {
+  if (values.length === 0) {
+    return [0, 1];
+  }
+
+  return extent(values) as [number, number];
+}
+
+function jitter(index: number, offset: number) {
+  const spread = missingBandSize / 2 - 8;
+  const normalized = ((index * 37 + offset * 17) % 101) / 100;
+  return (normalized * 2 - 1) * spread;
 }
 
 function expandDomain([minimum, maximum]: [number, number]): [number, number] {
