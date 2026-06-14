@@ -39,10 +39,7 @@
         :key="entry.value"
         class="d-flex align-center ga-2 text-body-2"
       >
-        <span
-          class="color-swatch"
-          :style="{ backgroundColor: entry.color }"
-        />
+        <span class="color-swatch" :style="{ backgroundColor: entry.color }" />
         <span class="text-truncate">{{ entry.value }}</span>
       </div>
     </div>
@@ -50,11 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  interpolateViridis,
-  scaleOrdinal,
-  schemeTableau10,
-} from "d3";
+import { interpolateViridis, scaleOrdinal, schemeTableau10 } from "d3";
 
 const props = defineProps<{
   attribute: string;
@@ -78,8 +71,7 @@ const numericLegend = computed(() => {
 
   const gradientStops = Array.from(
     { length: 7 },
-    (_, index) =>
-      `${interpolateViridis(index / 6)} ${(index / 6) * 100}%`,
+    (_, index) => `${interpolateViridis(index / 6)} ${(index / 6) * 100}%`,
   );
 
   return {

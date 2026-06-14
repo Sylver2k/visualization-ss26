@@ -1,8 +1,5 @@
 import { schemeTableau10 } from "d3";
-import type {
-  DatasetColumn,
-  DatasetRow,
-} from "../composables/types";
+import type { DatasetColumn, DatasetRow } from "../composables/types";
 
 export const categoricalColorCount = schemeTableau10.length;
 

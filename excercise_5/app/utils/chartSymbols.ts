@@ -7,10 +7,7 @@ import {
   symbolTriangle,
   symbolWye,
 } from "d3";
-import type {
-  DatasetColumn,
-  DatasetRow,
-} from "../composables/types";
+import type { DatasetColumn, DatasetRow } from "../composables/types";
 
 export const chartSymbolTypes = [
   symbolCircle,
@@ -41,7 +38,6 @@ export function getShapeAttributes(
         attribute.distinctValueCount <= chartSymbolCount,
     )
     .sort(
-      (first, second) =>
-        first.distinctValueCount - second.distinctValueCount,
+      (first, second) => first.distinctValueCount - second.distinctValueCount,
     );
 }

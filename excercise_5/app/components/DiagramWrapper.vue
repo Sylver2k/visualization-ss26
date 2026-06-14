@@ -207,14 +207,10 @@ function drawChart() {
 
   const xDomain = numericDomain(numericXValues);
   const yDomain = numericDomain(numericYValues);
-  const plotRight =
-    width - margin.right - missingBandGap - missingBandSize;
-  const plotBottom =
-    height - margin.bottom - missingBandGap - missingBandSize;
-  const missingXPosition =
-    plotRight + missingBandGap + missingBandSize / 2;
-  const missingYPosition =
-    plotBottom + missingBandGap + missingBandSize / 2;
+  const plotRight = width - margin.right - missingBandGap - missingBandSize;
+  const plotBottom = height - margin.bottom - missingBandGap - missingBandSize;
+  const missingXPosition = plotRight + missingBandGap + missingBandSize / 2;
+  const missingYPosition = plotBottom + missingBandGap + missingBandSize / 2;
 
   const xScale = scaleLinear()
     .domain(expandDomain(xDomain))
@@ -311,23 +307,20 @@ function drawChart() {
     .selectAll("path")
     .data(points)
     .join("path")
-    .attr(
-      "transform",
-      (row, index) => {
-        const xValue = row[xAttribute];
-        const yValue = row[yAttribute];
-        const x =
-          typeof xValue === "number"
-            ? xScale(xValue)
-            : missingXPosition + jitter(index, 0);
-        const y =
-          typeof yValue === "number"
-            ? yScale(yValue)
-            : missingYPosition + jitter(index, 1);
+    .attr("transform", (row, index) => {
+      const xValue = row[xAttribute];
+      const yValue = row[yAttribute];
+      const x =
+        typeof xValue === "number"
+          ? xScale(xValue)
+          : missingXPosition + jitter(index, 0);
+      const y =
+        typeof yValue === "number"
+          ? yScale(yValue)
+          : missingYPosition + jitter(index, 1);
 
-        return `translate(${x}, ${y})`;
-      },
-    )
+      return `translate(${x}, ${y})`;
+    })
     .attr("d", (row) =>
       symbol()
         .type(shapeScale(String(row[shapeAttribute] ?? "NA")))

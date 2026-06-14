@@ -56,10 +56,7 @@
 
 <script setup lang="ts">
 import { getColorAttributes } from "../utils/chartColors";
-import {
-  chartSymbolCount,
-  getShapeAttributes,
-} from "../utils/chartSymbols";
+import { chartSymbolCount, getShapeAttributes } from "../utils/chartSymbols";
 
 const props = defineProps<{
   columns: DatasetColumn[];

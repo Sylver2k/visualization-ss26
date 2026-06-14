@@ -1,15 +1,6 @@
 <template>
-  <v-overlay
-    v-model="isLoading"
-    class="align-center justify-center"
-    persistent
-  >
-    <v-progress-circular
-      color="primary"
-      indeterminate
-      size="64"
-      width="6"
-    />
+  <v-overlay v-model="isLoading" class="align-center justify-center" persistent>
+    <v-progress-circular color="primary" indeterminate size="64" width="6" />
   </v-overlay>
 </template>
 
