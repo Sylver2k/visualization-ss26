@@ -15,7 +15,7 @@ export default defineNuxtConfig({
       vuetify({ autoImport: true }),
     ],
     optimizeDeps: {
-      include: ["@vue/devtools-core", "@vue/devtools-kit"],
+      include: ["@vue/devtools-core", "@vue/devtools-kit", "d3"],
     },
     vue: {
       template: {
