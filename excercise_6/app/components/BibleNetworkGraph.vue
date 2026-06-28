@@ -58,8 +58,9 @@ import {
   scaleLinear,
   scaleSqrt,
   select,
+  zoom,
 } from "d3";
-import type { D3DragEvent, Simulation } from "d3";
+import type { D3DragEvent, D3ZoomEvent, Simulation } from "d3";
 
 const props = defineProps<{
   dataset: ParsedGraphDataset;
@@ -136,6 +137,14 @@ function drawGraph() {
   svg.attr("viewBox", `0 0 ${width} ${height}`);
 
   const graphLayer = svg.append("g");
+
+  svg.call(
+    zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.5, 5])
+      .on("zoom", (event: D3ZoomEvent<SVGSVGElement, unknown>) => {
+        graphLayer.attr("transform", event.transform.toString());
+      }),
+  );
 
   const linkSelection = graphLayer
     .append("g")
@@ -323,6 +332,7 @@ function dragEnded(
 .network-graph {
   display: block;
   min-height: 640px;
+  touch-action: none;
   width: 100%;
 }
 
