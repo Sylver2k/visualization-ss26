@@ -61,6 +61,12 @@ const datasetOptions: DatasetOption[] = [
       "A compact 100-edge subset with varied names and weights for quick testing.",
   },
   {
+    title: "Bible names connections - medium",
+    value: "/data/bible_names_connections_medium.tsv",
+    description:
+      "A 1000-edge subset that keeps strong links and adds diverse names from the full dataset.",
+  },
+  {
     title: "Bible names connections - full",
     value: "/data/bible_name_connections.tsv",
     description:
