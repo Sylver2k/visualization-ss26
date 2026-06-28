@@ -273,7 +273,10 @@ function applySearchHighlight() {
   svg
     .selectAll<SVGTextElement, GraphNode>(".network-label")
     .attr("fill", (node) =>
-      isMatchedNode(node, matchedNames) ? "#ff9800" : "#263238",
+      isMatchedNode(node, matchedNames) ? "#000000" : "#263238",
+    )
+    .attr("font-weight", (node) =>
+      isMatchedNode(node, matchedNames) ? 700 : 400,
     )
     .attr("opacity", (node) =>
       !hasSearch || isMatchedNode(node, matchedNames) ? 1 : 0.26,
