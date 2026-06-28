@@ -139,11 +139,12 @@ function drawGraph() {
   const graphLayer = svg.append("g");
 
   svg.call(
-    zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.5, 5])
-      .on("zoom", (event: D3ZoomEvent<SVGSVGElement, unknown>) => {
+    zoom<SVGSVGElement, unknown>().on(
+      "zoom",
+      (event: D3ZoomEvent<SVGSVGElement, unknown>) => {
         graphLayer.attr("transform", event.transform.toString());
-      }),
+      },
+    ),
   );
 
   const linkSelection = graphLayer
