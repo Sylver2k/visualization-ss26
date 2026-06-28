@@ -49,6 +49,7 @@
 
 <script setup lang="ts">
 import {
+  drag,
   forceCenter,
   forceCollide,
   forceLink,
@@ -58,7 +59,7 @@ import {
   scaleSqrt,
   select,
 } from "d3";
-import type { Simulation } from "d3";
+import type { D3DragEvent, Simulation } from "d3";
 
 const props = defineProps<{
   dataset: ParsedGraphDataset;
@@ -163,7 +164,13 @@ function drawGraph() {
     .attr("fill", "#1976d2")
     .attr("fill-opacity", 0.86)
     .attr("stroke", "#ffffff")
-    .attr("stroke-width", 1.4);
+    .attr("stroke-width", 1.4)
+    .call(
+      drag<SVGCircleElement, GraphNode>()
+        .on("start", dragStarted)
+        .on("drag", dragged)
+        .on("end", dragEnded),
+    );
 
   nodeSelection
     .append("title")
@@ -278,6 +285,38 @@ function isRelatedLink(link: GraphLink, matchedNames: Set<string>) {
 function normalizedSearchQuery() {
   return searchQuery.value.trim().toLowerCase();
 }
+
+function dragStarted(
+  event: D3DragEvent<SVGCircleElement, GraphNode, GraphNode>,
+  node: GraphNode,
+) {
+  if (!event.active) {
+    simulation?.alphaTarget(0.3).restart();
+  }
+
+  node.fx = node.x;
+  node.fy = node.y;
+}
+
+function dragged(
+  event: D3DragEvent<SVGCircleElement, GraphNode, GraphNode>,
+  node: GraphNode,
+) {
+  node.fx = event.x;
+  node.fy = event.y;
+}
+
+function dragEnded(
+  event: D3DragEvent<SVGCircleElement, GraphNode, GraphNode>,
+  node: GraphNode,
+) {
+  if (!event.active) {
+    simulation?.alphaTarget(0);
+  }
+
+  node.fx = null;
+  node.fy = null;
+}
 </script>
 
 <style scoped>
@@ -289,5 +328,10 @@ function normalizedSearchQuery() {
 
 .network-card {
   width: 100%;
+}
+
+:deep(.network-label) {
+  pointer-events: none;
+  user-select: none;
 }
 </style>
