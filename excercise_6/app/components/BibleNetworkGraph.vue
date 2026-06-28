@@ -1,12 +1,38 @@
 <template>
   <v-card class="network-card" variant="outlined">
-    <v-card-item>
-      <v-card-title>Bible name network</v-card-title>
-      <v-card-subtitle>
-        {{ dataset.fileName }} · {{ dataset.nodes.length }} nodes ·
-        {{ dataset.links.length }} edges
-      </v-card-subtitle>
-    </v-card-item>
+    <v-row>
+      <v-col cols="4">
+        <v-card-title>Bible name network</v-card-title>
+        <v-card-subtitle>
+          {{ dataset.fileName }} · {{ dataset.nodes.length }} nodes ·
+          {{ dataset.links.length }} edges
+        </v-card-subtitle>
+      </v-col>
+
+      <v-spacer />
+
+      <v-col cols="5">
+        <div class="d-flex flex-grow-1 align-center ga-4 py-2 pr-4">
+          <v-text-field
+            v-model="searchQuery"
+            clearable
+            density="comfortable"
+            hide-details
+            label="Search person"
+            prepend-inner-icon="mdi-magnify"
+            variant="outlined"
+          />
+
+          <div class="text-body-2 text-medium-emphasis">
+            {{ searchSummary }}
+          </div>
+        </div>
+      </v-col>
+    </v-row>
+
+    <div class="d-flex align-center justify-space-between">
+      <div class="mr-16"></div>
+    </div>
 
     <v-divider />
 
@@ -39,10 +65,34 @@ const props = defineProps<{
 }>();
 
 const graphElement = ref<SVGSVGElement | null>(null);
+const searchQuery = ref("");
 const width = 1100;
 const height = 680;
 
 let simulation: Simulation<GraphNode, GraphLink> | null = null;
+
+const matchingNodeNames = computed(() => {
+  const query = normalizedSearchQuery();
+
+  if (!query) {
+    return new Set<string>();
+  }
+
+  return new Set(
+    props.dataset.nodes
+      .filter((node) => node.name.toLowerCase().includes(query))
+      .map((node) => node.name),
+  );
+});
+
+const searchSummary = computed(() => {
+  if (!normalizedSearchQuery()) {
+    return "No search active";
+  }
+
+  const count = matchingNodeNames.value.size;
+  return `${count} matching ${count === 1 ? "person" : "people"}`;
+});
 
 onMounted(drawGraph);
 
@@ -52,6 +102,8 @@ watch(
     nextTick(drawGraph);
   },
 );
+
+watch(searchQuery, applySearchHighlight);
 
 onBeforeUnmount(() => {
   simulation?.stop();
@@ -91,6 +143,7 @@ function drawGraph() {
     .selectAll("line")
     .data(links)
     .join("line")
+    .attr("class", "network-link")
     .attr("stroke-width", (link) => edgeWidthScale(link.weight));
 
   linkSelection
@@ -105,10 +158,11 @@ function drawGraph() {
     .selectAll("circle")
     .data(nodes)
     .join("circle")
+    .attr("class", "network-node")
     .attr("r", (node) => radiusScale(node.degree))
     .attr("fill", "#1976d2")
     .attr("fill-opacity", 0.86)
-    .attr("stroke", "#0d47a1")
+    .attr("stroke", "#ffffff")
     .attr("stroke-width", 1.4);
 
   nodeSelection
@@ -123,6 +177,7 @@ function drawGraph() {
     .selectAll("text")
     .data(nodes)
     .join("text")
+    .attr("class", "network-label")
     .attr("dx", (node) => radiusScale(node.degree) + 4)
     .attr("dy", "0.35em")
     .text((node) => node.name);
@@ -156,6 +211,8 @@ function drawGraph() {
         .attr("x", (node) => node.x ?? width / 2)
         .attr("y", (node) => node.y ?? height / 2);
     });
+
+  applySearchHighlight();
 }
 
 function nodeId(node: string | GraphNode) {
@@ -168,6 +225,58 @@ function nodeX(node: string | GraphNode) {
 
 function nodeY(node: string | GraphNode) {
   return typeof node === "string" ? height / 2 : (node.y ?? height / 2);
+}
+
+function applySearchHighlight() {
+  if (!graphElement.value) {
+    return;
+  }
+
+  const matchedNames = matchingNodeNames.value;
+  const hasSearch = normalizedSearchQuery().length > 0;
+  const svg = select(graphElement.value);
+
+  svg
+    .selectAll<SVGCircleElement, GraphNode>(".network-node")
+    .attr("fill", (node) =>
+      isMatchedNode(node, matchedNames) ? "#ff9800" : "#1976d2",
+    )
+    .attr("fill-opacity", (node) =>
+      !hasSearch || isMatchedNode(node, matchedNames) ? 0.86 : 0.16,
+    );
+
+  svg
+    .selectAll<SVGLineElement, GraphLink>(".network-link")
+    .attr("stroke", (link) =>
+      hasSearch && isRelatedLink(link, matchedNames) ? "#ff9800" : "#90a4ae",
+    )
+    .attr("stroke-opacity", (link) =>
+      !hasSearch || isRelatedLink(link, matchedNames) ? 0.62 : 0.06,
+    );
+
+  svg
+    .selectAll<SVGTextElement, GraphNode>(".network-label")
+    .attr("fill", (node) =>
+      isMatchedNode(node, matchedNames) ? "#ff9800" : "#263238",
+    )
+    .attr("opacity", (node) =>
+      !hasSearch || isMatchedNode(node, matchedNames) ? 1 : 0.26,
+    );
+}
+
+function isMatchedNode(node: GraphNode, matchedNames: Set<string>) {
+  return matchedNames.has(node.name);
+}
+
+function isRelatedLink(link: GraphLink, matchedNames: Set<string>) {
+  return (
+    matchedNames.has(nodeId(link.source)) ||
+    matchedNames.has(nodeId(link.target))
+  );
+}
+
+function normalizedSearchQuery() {
+  return searchQuery.value.trim().toLowerCase();
 }
 </script>
 
